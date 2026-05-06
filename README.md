@@ -141,4 +141,4 @@ Every quantum method must be compared against a classical baseline. A tutorial i
 - metrics
 - a real use case
 - a source-paper trail
-- a clear explanation of when not to use the method
+- a clear explanation of when not to use the method# quantum-practitioner-lab
