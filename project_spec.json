@@ -1,0 +1,78 @@
+{
+  "project_name": "quantum-practitioner-lab",
+  "version": "0.3.0",
+  "mission": "Build practical tutorials and examples for quantum simulation, optimization, PDEs, and quantum machine learning.",
+  "core_areas": [
+    "quantum_simulation",
+    "quantum_optimization",
+    "quantum_pdes",
+    "quantum_machine_learning",
+    "benchmarking",
+    "source_papers",
+    "backend_adapters"
+  ],
+  "priority_tutorials": [
+    {
+      "id": "vqe_molecular_energy",
+      "title": "VQE for Molecular Energy",
+      "use_case": "materials discovery refinement",
+      "algorithm_type": "hybrid variational eigensolver",
+      "classical_baselines": [
+        "exact diagonalization",
+        "Hartree-Fock"
+      ],
+      "source_papers": [
+        "Peruzzo VQE",
+        "Grimsley ADAPT-VQE"
+      ],
+      "required_outputs": [
+        "energy convergence plot",
+        "energy error",
+        "baseline comparison"
+      ]
+    },
+    {
+      "id": "qaoa_portfolio_selection",
+      "title": "QAOA for Portfolio Selection",
+      "use_case": "quantum-hybrid portfolio optimizer",
+      "algorithm_type": "hybrid combinatorial optimization",
+      "classical_baselines": [
+        "brute force",
+        "simulated annealing",
+        "greedy selection"
+      ],
+      "source_papers": [
+        "Farhi QAOA"
+      ],
+      "required_outputs": [
+        "selected assets",
+        "objective value",
+        "constraint report"
+      ]
+    },
+    {
+      "id": "quantum_kernel_biomedical_classification",
+      "title": "Quantum Kernel for Biomedical Classification",
+      "use_case": "biomedical KG link prediction",
+      "algorithm_type": "kernel method / QSVC",
+      "classical_baselines": [
+        "RBF-SVM",
+        "XGBoost",
+        "Random Forest"
+      ],
+      "source_papers": [
+        "Havl\u00ed\u010dek quantum-enhanced feature spaces"
+      ],
+      "required_outputs": [
+        "ROC-AUC",
+        "F1",
+        "kernel matrix visualization"
+      ]
+    }
+  ],
+  "display_name": "Quantum Practitioner Lab",
+  "package": "qprac_lab",
+  "cli": "qprac-lab",
+  "release_artifact": "quantum-practitioner-lab-v0.3.0-scaffold.zip",
+  "repo": "quantum-practitioner-lab"
+}

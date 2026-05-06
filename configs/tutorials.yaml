@@ -1,0 +1,17 @@
+tutorials:
+  - id: vqe_molecular_energy
+    path: tutorials/01-simulation/01-vqe-molecular-energy.md
+    notebook: notebooks/01-vqe-molecular-energy.ipynb
+    priority: 1
+  - id: qaoa_portfolio_selection
+    path: tutorials/02-optimization/02-qaoa-portfolio-selection.md
+    notebook: notebooks/02-qaoa-portfolio-selection.ipynb
+    priority: 1
+  - id: quantum_kernel_biomedical
+    path: tutorials/04-qml/03-quantum-kernel-biomedical-classification.md
+    notebook: notebooks/03-quantum-kernel-biomedical-classification.ipynb
+    priority: 1
+  - id: hhl_intro
+    path: tutorials/03-pdes/01-hhl-linear-systems-intro.md
+    notebook: notebooks/04-hhl-linear-systems-intro.ipynb
+    priority: 3

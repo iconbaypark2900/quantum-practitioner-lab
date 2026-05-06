@@ -1,0 +1,20 @@
+backends:
+  local_scaffold:
+    type: scaffold
+    enabled: true
+  qiskit_aer:
+    type: simulator
+    enabled: true
+    package: qiskit-aer
+  qiskit_aer_noisy:
+    type: noisy_simulator
+    enabled: false
+    package: qiskit-aer
+  ibm_runtime:
+    type: qpu_or_managed_runtime
+    enabled: false
+    package: qiskit-ibm-runtime
+  cudaq:
+    type: hybrid_quantum_runtime
+    enabled: false
+    package: cudaq

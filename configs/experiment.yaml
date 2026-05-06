@@ -1,0 +1,10 @@
+experiment:
+  name: first_three_tutorials
+  seed: 42
+  save_artifacts: true
+  output_dir: results
+
+runs:
+  - algorithm: vqe_molecular_energy
+  - algorithm: qaoa_portfolio_selection
+  - algorithm: quantum_kernel_biomedical

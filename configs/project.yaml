@@ -1,0 +1,13 @@
+project:
+  name: qprac-lab
+  version: 0.3.0
+  default_backend: qiskit_aer
+  default_shots: 1024
+  random_seed: 42
+
+paths:
+  data_raw: data/raw
+  data_processed: data/processed
+  results: results
+  papers: papers
+  notebooks: notebooks

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-practitioner-lab"
+version = "0.3.0"
+description = "A professional quantum engineering learning lab for simulation, optimization, PDEs, QML, benchmarking, and source-paper-driven examples."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Jon B" }]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pandas>=2.1",
+  "scikit-learn>=1.3",
+  "matplotlib>=3.8",
+  "networkx>=3.2",
+  "pyyaml>=6.0",
+  "jupyter>=1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+  "mypy>=1.10"
+]
+qiskit = [
+  "qiskit>=1.2",
+  "qiskit-aer>=0.14",
+  "qiskit-machine-learning>=0.7",
+  "qiskit-optimization>=0.6"
+]
+xgboost = [
+  "xgboost>=2.0"
+]
+cudaq = [
+  "cudaq"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[project.scripts]
+qprac-lab = "qprac_lab.cli:main"
+

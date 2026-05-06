@@ -1,0 +1,67 @@
+simulation:
+  vqe_molecular_energy:
+    priority: 1
+    algorithm_type: hybrid_variational_eigensolver
+    use_case: materials_discovery_refinement
+    baseline:
+      - exact_diagonalization
+      - hartree_fock
+    outputs:
+      - energy_convergence_plot
+      - energy_error
+      - baseline_comparison
+  adapt_vqe_materials:
+    priority: 2
+    algorithm_type: adaptive_variational_eigensolver
+  trotterization:
+    priority: 3
+    algorithm_type: hamiltonian_time_evolution
+
+optimization:
+  qaoa_portfolio_selection:
+    priority: 1
+    algorithm_type: hybrid_combinatorial_optimization
+    baseline:
+      - brute_force
+      - greedy
+      - simulated_annealing
+    outputs:
+      - selected_assets
+      - objective_value
+      - constraint_report
+  qaoa_maxcut:
+    priority: 2
+    algorithm_type: hybrid_combinatorial_optimization
+  qubo_ising_mapping:
+    priority: 2
+    algorithm_type: problem_transformation
+
+pdes:
+  hhl_intro:
+    priority: 3
+    algorithm_type: quantum_linear_systems
+  variational_heat_equation:
+    priority: 3
+    algorithm_type: variational_quantum_pde_solver
+  black_scholes_pde:
+    priority: 3
+    algorithm_type: quantum_financial_pde_demo
+
+qml:
+  quantum_kernel_biomedical:
+    priority: 1
+    algorithm_type: kernel_method_qsvc
+    baseline:
+      - rbf_svm
+      - random_forest
+      - xgboost
+    outputs:
+      - roc_auc
+      - f1
+      - kernel_matrix_visualization
+  qsvc_classifier:
+    priority: 2
+    algorithm_type: quantum_support_vector_classifier
+  vqc_classifier:
+    priority: 2
+    algorithm_type: variational_quantum_classifier

@@ -1,0 +1,42 @@
+{
+  "simulation": [
+    {
+      "title": "A variational eigenvalue solver on a photonic quantum processor",
+      "topic": "VQE"
+    },
+    {
+      "title": "An adaptive variational algorithm for exact molecular simulations on a quantum computer",
+      "topic": "ADAPT-VQE"
+    },
+    {
+      "title": "Universal Quantum Simulators",
+      "topic": "Hamiltonian simulation"
+    }
+  ],
+  "optimization": [
+    {
+      "title": "A Quantum Approximate Optimization Algorithm",
+      "topic": "QAOA"
+    }
+  ],
+  "pdes": [
+    {
+      "title": "Quantum algorithm for linear systems of equations",
+      "topic": "HHL"
+    },
+    {
+      "title": "Variational quantum algorithms for nonlinear problems",
+      "topic": "Variational PDEs"
+    }
+  ],
+  "qml": [
+    {
+      "title": "Supervised learning with quantum-enhanced feature spaces",
+      "topic": "Quantum kernels"
+    },
+    {
+      "title": "Data re-uploading for a universal quantum classifier",
+      "topic": "VQC"
+    }
+  ]
+}

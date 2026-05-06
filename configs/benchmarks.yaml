@@ -1,0 +1,28 @@
+benchmark:
+  repetitions: 3
+  output_csv: results/benchmark_results.csv
+  output_json: results/benchmark_results.json
+  include_runtime: true
+  include_backend: true
+
+metrics:
+  simulation:
+    - energy_error
+    - convergence_steps
+    - circuit_depth
+    - shots
+    - runtime_seconds
+  optimization:
+    - objective_value
+    - approximation_ratio
+    - constraint_violations
+    - runtime_seconds
+  pdes:
+    - l2_error
+    - residual_loss
+    - runtime_seconds
+  qml:
+    - accuracy
+    - f1
+    - roc_auc
+    - train_time_seconds

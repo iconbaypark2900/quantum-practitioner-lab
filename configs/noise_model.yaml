@@ -1,0 +1,6 @@
+noise_model:
+  enabled: false
+  profile: basic_depolarizing
+  depolarizing_probability_1q: 0.001
+  depolarizing_probability_2q: 0.01
+  readout_error_probability: 0.02

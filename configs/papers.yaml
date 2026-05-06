@@ -1,0 +1,40 @@
+papers:
+  simulation:
+    - title: "A variational eigenvalue solver on a photonic quantum processor"
+      authors: "Peruzzo et al."
+      year: 2014
+      topic: "VQE"
+    - title: "An adaptive variational algorithm for exact molecular simulations on a quantum computer"
+      authors: "Grimsley et al."
+      year: 2019
+      topic: "ADAPT-VQE"
+    - title: "Universal Quantum Simulators"
+      authors: "Seth Lloyd"
+      year: 1996
+      topic: "Hamiltonian simulation"
+
+  optimization:
+    - title: "A Quantum Approximate Optimization Algorithm"
+      authors: "Farhi, Goldstone, Gutmann"
+      year: 2014
+      topic: "QAOA"
+
+  pdes:
+    - title: "Quantum algorithm for linear systems of equations"
+      authors: "Harrow, Hassidim, Lloyd"
+      year: 2009
+      topic: "HHL"
+    - title: "Variational quantum algorithms for nonlinear problems"
+      authors: "Lubasch et al."
+      year: 2020
+      topic: "Variational PDEs"
+
+  qml:
+    - title: "Supervised learning with quantum-enhanced feature spaces"
+      authors: "Havlíček et al."
+      year: 2019
+      topic: "Quantum kernels"
+    - title: "Data re-uploading for a universal quantum classifier"
+      authors: "Pérez-Salinas et al."
+      year: 2020
+      topic: "VQC"

@@ -1,0 +1,6 @@
+qiskit:
+  default_simulator: aer_simulator
+  shots: 1024
+  seed_simulator: 42
+  optimization_level: 1
+  use_runtime: false
