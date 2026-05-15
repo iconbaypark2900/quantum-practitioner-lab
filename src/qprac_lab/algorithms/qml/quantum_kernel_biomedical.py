@@ -5,7 +5,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 from qprac_lab.data.synthetic import make_biomedical_pair_features
-from qprac_lab.baselines.classical_ml import train_rbf_svm, train_random_forest
+from qprac_lab.baselines.classical_ml import (
+    train_rbf_svm,
+    train_random_forest,
+    train_xgboost_classifier,
+)
 from qprac_lab.metrics.classification import compute_classification_metrics
 
 
@@ -48,6 +52,14 @@ def run_quantum_kernel_biomedical_tutorial() -> BiomedicalKernelClassificationRe
     rf_scores = rf.predict_proba(x_test)[:, 1]
     rf_metrics = compute_classification_metrics(y_test, rf_preds, rf_scores).__dict__
 
+    xgb = train_xgboost_classifier(x_train, y_train)
+    if xgb is None:
+        xgb_metrics: dict | str = "install_optional_extra_xgboost"
+    else:
+        xgb_preds = xgb.predict(x_test)
+        xgb_scores = xgb.predict_proba(x_test)[:, 1]
+        xgb_metrics = compute_classification_metrics(y_test, xgb_preds, xgb_scores).__dict__
+
     kernel_preview = simple_rbf_kernel_preview(x_train)
 
     return BiomedicalKernelClassificationReport(
@@ -56,6 +68,6 @@ def run_quantum_kernel_biomedical_tutorial() -> BiomedicalKernelClassificationRe
         algorithm_type="kernel_method_qsvc",
         rbf_svm_metrics=svm_metrics,
         random_forest_metrics=rf_metrics,
-        xgboost_metrics="optional_dependency_todo",
+        xgboost_metrics=xgb_metrics,
         kernel_matrix_preview=kernel_preview.round(4).tolist(),
     )

@@ -19,3 +19,4 @@ def test_quantum_kernel_biomedical_tutorial_runs():
     result = run_quantum_kernel_biomedical_tutorial()
     assert result.algorithm == "quantum_kernel_biomedical_classification"
     assert "f1" in result.rbf_svm_metrics
+    assert isinstance(result.xgboost_metrics, (dict, str))

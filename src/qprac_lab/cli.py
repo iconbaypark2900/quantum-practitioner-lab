@@ -4,16 +4,7 @@ import argparse
 import json
 from dataclasses import asdict, is_dataclass
 
-from qprac_lab.algorithms.simulation.vqe_molecular_energy import run_vqe_molecular_energy_tutorial
-from qprac_lab.algorithms.optimization.qaoa_portfolio_selection import run_qaoa_portfolio_selection_tutorial
-from qprac_lab.algorithms.qml.quantum_kernel_biomedical import run_quantum_kernel_biomedical_tutorial
-
-
-DEMOS = {
-    "vqe_molecular_energy": run_vqe_molecular_energy_tutorial,
-    "qaoa_portfolio_selection": run_qaoa_portfolio_selection_tutorial,
-    "quantum_kernel_biomedical": run_quantum_kernel_biomedical_tutorial,
-}
+from qprac_lab.demo_registry import DEMOS
 
 
 def to_jsonable(result):
@@ -27,7 +18,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     demo_parser = subparsers.add_parser("demo")
-    demo_parser.add_argument("--algorithm", choices=DEMOS.keys(), required=True)
+    demo_parser.add_argument("--algorithm", choices=sorted(DEMOS.keys()), required=True)
 
     args = parser.parse_args()
 

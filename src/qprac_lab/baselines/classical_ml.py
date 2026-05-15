@@ -27,3 +27,28 @@ def train_random_forest(x_train, y_train, random_state: int = 42):
     model = RandomForestClassifier(n_estimators=100, random_state=random_state)
     model.fit(x_train, y_train)
     return model
+
+
+def train_xgboost_classifier(x_train, y_train, random_state: int = 42):
+    """Gradient boosting baseline when ``xgboost`` is installed; otherwise ``None``."""
+    try:
+        import xgboost as xgb
+    except ImportError:
+        return None
+    model = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            (
+                "xgb",
+                xgb.XGBClassifier(
+                    n_estimators=80,
+                    max_depth=4,
+                    learning_rate=0.1,
+                    random_state=random_state,
+                    eval_metric="logloss",
+                ),
+            ),
+        ]
+    )
+    model.fit(x_train, y_train)
+    return model

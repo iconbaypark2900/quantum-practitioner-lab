@@ -18,7 +18,7 @@
 - [x] Add scaffold implementation
 - [x] Add convergence plot output
 - [ ] Add Qiskit molecular Hamiltonian support
-- [ ] Add exact diagonalization baseline
+- [x] Add exact diagonalization baseline (toy `2×2` Hamiltonian vs grid search)
 - [ ] Add Hartree-Fock baseline note/result
 - [ ] Add optimizer history
 - [ ] Add notebook walkthrough
@@ -29,7 +29,7 @@
 - [x] Add brute-force baseline
 - [x] Add greedy baseline
 - [x] Add constraint report
-- [ ] Add simulated annealing baseline
+- [x] Add simulated annealing baseline
 - [ ] Add QUBO builder
 - [ ] Add Qiskit QAOA/Sampler implementation
 - [ ] Add notebook walkthrough
@@ -40,7 +40,7 @@
 - [x] Add RBF-SVM baseline
 - [x] Add Random Forest baseline
 - [x] Add kernel matrix preview
-- [ ] Add optional XGBoost baseline
+- [x] Add optional XGBoost baseline (`pip install -e ".[xgboost]"`)
 - [ ] Add Qiskit FidelityQuantumKernel
 - [ ] Add QSVC
 - [ ] Add biomedical KG-shaped dataset loader
