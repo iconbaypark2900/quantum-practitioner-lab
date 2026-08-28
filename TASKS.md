@@ -25,7 +25,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add optimizer history (real objective-evaluation trace, not a parameter sweep)
 - [x] Add real Estimator loop (one-parameter UCC and hardware-efficient ansaetze)
 - [x] Add dissociation curve showing where Hartree-Fock fails
-- [ ] Add notebook walkthrough
+- [x] Add notebook walkthrough
 - [ ] Add ADAPT-VQE ansatz construction
 
 ### QAOA for Portfolio Selection
@@ -38,7 +38,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add QUBO builder (with exhaustive QUBO/Ising equivalence tests)
 - [x] Add Qiskit QAOA/Sampler implementation
 - [x] Add sampling-quality metrics (feasible rate, lift over uniform)
-- [ ] Add notebook walkthrough
+- [x] Add notebook walkthrough
 - [x] Add XY mixer to preserve the cardinality constraint by construction
 
 ### Quantum Kernel for Biomedical Classification
@@ -54,14 +54,14 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add biomedical KG dataset loader (real Hetionet CtD link prediction)
 - [x] Add degree-matched negative sampling and a leakage diagnostic
 - [x] Replace the single train/test split with repeated cross-validation
-- [ ] Add notebook walkthrough
+- [x] Add notebook walkthrough
 
 ## Phase 3: Implement secondary tutorials
 
 - [ ] ADAPT-VQE
 - [x] Hamiltonians and expectation values (`hamiltonian_utils`)
 - [ ] Trotterization
-- [x] QAOA Max-Cut
+- [x] QAOA Max-Cut (+ notebook walkthrough)
 - [x] QUBO / Ising mapping
 - [ ] HHL intro
 - [ ] Variational heat equation

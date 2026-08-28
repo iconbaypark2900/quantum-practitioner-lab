@@ -186,6 +186,24 @@ Writes to `results/`:
 - `kernel_matrix.png`, `kernel_model_comparison.png`
 - `first_three_tutorial_outputs.json`
 
+## Notebooks
+
+Executable walkthroughs for every implemented tutorial, with outputs committed so
+they read on GitHub without running anything:
+
+| Notebook | Covers |
+| --- | --- |
+| [`01-vqe-molecular-energy`](notebooks/01-vqe-molecular-energy.ipynb) | Hamiltonian, both baselines, convergence, dissociation curve, noise |
+| [`02-qaoa-portfolio-selection`](notebooks/02-qaoa-portfolio-selection.ipynb) | QUBO → Ising, penalty vs XY mixer, depth sweep, noise |
+| [`03-quantum-kernel-biomedical-classification`](notebooks/03-quantum-kernel-biomedical-classification.ipynb) | Hetionet data, leakage and degree checks, cross-validated comparison, self-fidelity |
+| [`04-qaoa-maxcut`](notebooks/04-qaoa-maxcut.ipynb) | The unconstrained reference problem — **start here** |
+
+`05` and `06` remain placeholders for the PDE scaffolds.
+
+```bash
+jupyter lab notebooks/
+```
+
 ## CLI
 
 ```bash
