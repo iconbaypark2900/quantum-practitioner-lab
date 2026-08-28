@@ -92,6 +92,7 @@ def run_qaoa(
     backend: str = "statevector",
     shots: int = 4096,
     seed: int = 42,
+    noise: str | None = None,
     mixer: str = "transverse_field",
     num_ones: int | None = None,
     xy_topology: str = "ring",
@@ -130,8 +131,9 @@ def run_qaoa(
         ansatz = QAOAAnsatz(cost_operator=cost_operator, reps=reps).decompose(reps=3)
     else:
         raise ValueError(f"Unknown mixer {mixer!r}; expected 'transverse_field' or 'xy'")
-    adapter = QiskitBackendAdapter(backend=backend, shots=None, seed=seed)
+    adapter = QiskitBackendAdapter(backend=backend, shots=None, seed=seed, noise=noise)
     estimator = adapter.estimator()
+    ansatz = adapter.prepare(ansatz)
     history: list[float] = []
 
     def objective(parameters: np.ndarray) -> float:
@@ -156,8 +158,15 @@ def run_qaoa(
 
     measured = ansatz.assign_parameters(result.x)
     measured.measure_all()
-    sampler = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed).sampler()
-    counts = sampler.run([measured]).result()[0].data.meas.get_counts()
+    sampling_adapter = QiskitBackendAdapter(
+        backend=backend, shots=shots, seed=seed, noise=noise
+    )
+    counts = (
+        sampling_adapter.sampler()
+        .run([sampling_adapter.prepare(measured)])
+        .result()[0]
+        .data.meas.get_counts()
+    )
     return result, counts, history, offset
 
 
@@ -190,6 +199,7 @@ def run_qaoa_portfolio_selection_tutorial(
     optimizer: str = "COBYLA",
     maxiter: int = 300,
     seed: int = 42,
+    noise: str | None = None,
 ) -> PortfolioSelectionReport:
     """Run tutorial 2 end to end: QAOA portfolio selection against three baselines."""
     require_qiskit("The QAOA portfolio-selection tutorial")
@@ -217,6 +227,7 @@ def run_qaoa_portfolio_selection_tutorial(
         backend=backend,
         shots=shots,
         seed=seed,
+        noise=noise,
         mixer=mixer,
         num_ones=budget if mixer == "xy" else None,
         xy_topology=xy_topology,
@@ -302,7 +313,9 @@ def run_qaoa_portfolio_selection_tutorial(
         algorithm="qaoa_portfolio_selection",
         use_case="quantum_hybrid_portfolio_optimizer",
         algorithm_type="hybrid_combinatorial_optimization",
-        backend=QiskitBackendAdapter(backend=backend, shots=shots, seed=seed).describe(),
+        backend=QiskitBackendAdapter(
+            backend=backend, shots=shots, seed=seed, noise=noise
+        ).describe(),
         problem={
             "n_assets": n_assets,
             "budget": budget,

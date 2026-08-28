@@ -24,6 +24,7 @@ CLI:                qprac-lab
 | QAOA for portfolio selection | **Implemented** — QUBO → Ising → `QAOAAnsatz` → sampling, with a constraint-preserving XY mixer |
 | QAOA for Max-Cut | **Implemented** — the unconstrained reference problem |
 | Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel`, on real Hetionet data |
+| Device noise models | **Implemented** — depolarizing + readout, all tutorials benchmarked |
 | PDEs, ADAPT-VQE, Trotter, VQC | Classical scaffolds only |
 | IBM Runtime / CUDA-Q backends | Placeholders |
 
@@ -141,6 +142,32 @@ plain approximation ratio is meaningful. Start here before the portfolio tutoria
 ```bash
 python scripts/run_demo.py --algorithm qaoa_maxcut
 ```
+
+## Every tutorial under device noise
+
+```bash
+python scripts/run_noise_sweep.py     # ~6 minutes
+```
+
+| Noise | VQE error (Ha) | Max-Cut E[ratio] | XY feasibility | Kernel self-fidelity |
+| --- | --- | --- | --- | --- |
+| ideal | `5.6e-10` | 0.886 | **100%** | 1.000 |
+| light | `2.2e-03` | 0.877 | 82.7% | 0.936 |
+| moderate | `1.1e-02` | 0.824 | 46.2% | 0.734 |
+| heavy | `3.7e-02` | 0.756 | 33.2% | 0.388 |
+
+Three findings worth the run:
+
+- **VQE is the most fragile thing here.** Even the optimistic preset misses
+  chemical accuracy (`2.2e-3` vs a `1.6e-3` threshold) on a *two-qubit* circuit.
+- **Max-Cut is the most robust**, losing only 15% of its ideal quality at heavy
+  noise. The pattern: methods needing a precise *number* break first; methods
+  needing only an *ordering* last longest.
+- **A structural guarantee is not preserved by noise.** The XY mixer's exact 100%
+  feasibility is a property of the ideal unitary; it measures 46% at moderate
+  device noise, and its lift falls below random guessing at heavy.
+
+Full write-up: [`tutorials/05-benchmarking/noise_benchmark.md`](tutorials/05-benchmarking/noise_benchmark.md).
 
 ## Generating artifacts
 

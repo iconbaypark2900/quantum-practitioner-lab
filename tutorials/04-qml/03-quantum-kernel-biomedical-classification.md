@@ -224,6 +224,14 @@ regime where a quadratic-cost kernel is affordable at all.
   0.01 difference. Any quantum-advantage claim from one split is noise.
 - **When you need calibrated probabilities.** Precomputed-kernel SVMs give
   decision-function scores; probabilities need an extra Platt-scaling fit.
+- **On noisy hardware without checking self-fidelity.** `K(x, x)` is 1 by
+  definition, so measuring it reads out how much of the circuit survived: 0.936 /
+  0.734 / 0.388 across the light / moderate / heavy presets. Note that
+  `FidelityQuantumKernel` *assumes* that diagonal by default
+  (`evaluate_duplicates="off_diagonal"`) and silently repairs the resulting
+  non-PSD matrix (`enforce_psd=True`), so both defaults hide exactly the damage
+  you would want to see. See
+  [the noise benchmark](../05-benchmarking/noise_benchmark.md).
 - **Expecting an advantage.** There is still no demonstrated quantum-kernel
   advantage on practical data. A tie on 200 samples is not one.
 

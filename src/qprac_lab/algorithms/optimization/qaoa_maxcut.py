@@ -80,6 +80,7 @@ def run_qaoa_maxcut_tutorial(
     optimizer: str = "COBYLA",
     maxiter: int = 300,
     seed: int = 42,
+    noise: str | None = None,
 ) -> MaxCutReport:
     """Run QAOA on a random regular graph and score it against the exact optimum."""
     require_qiskit("The QAOA Max-Cut tutorial")
@@ -94,6 +95,7 @@ def run_qaoa_maxcut_tutorial(
         backend=backend,
         shots=shots,
         seed=seed,
+        noise=noise,
     )
 
     exact = brute_force_maxcut(num_nodes, edges)
@@ -127,7 +129,9 @@ def run_qaoa_maxcut_tutorial(
         algorithm="qaoa_maxcut",
         use_case="graph_partitioning_and_network_clustering",
         algorithm_type="hybrid_combinatorial_optimization",
-        backend=QiskitBackendAdapter(backend=backend, shots=shots, seed=seed).describe(),
+        backend=QiskitBackendAdapter(
+            backend=backend, shots=shots, seed=seed, noise=noise
+        ).describe(),
         graph={
             "num_nodes": num_nodes,
             "num_edges": len(edges),

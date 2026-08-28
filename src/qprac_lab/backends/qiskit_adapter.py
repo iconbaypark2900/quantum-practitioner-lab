@@ -13,7 +13,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from qprac_lab.backends.noise import (
+    build_noise_model,
+    noise_basis_gates,
+    noise_spec,
+)
+
 INSTALL_HINT = 'install the quantum stack with: pip install -e ".[qiskit]"'
+
+#: A universal basis Aer executes natively. Transpiling into it is exact -- it
+#: only rewrites gates, never approximates them.
+AER_BASIS_GATES = ["id", "rz", "sx", "x", "cx"]
 
 #: Backends this adapter knows how to build primitives for.
 SUPPORTED_BACKENDS = ("statevector", "aer")
@@ -80,6 +90,7 @@ class QiskitBackendAdapter:
     backend: str = "statevector"
     shots: int | None = None
     seed: int | None = 42
+    noise: str | None = None
 
     name = "qiskit_adapter"
 
@@ -90,6 +101,15 @@ class QiskitBackendAdapter:
             )
         if self.shots is not None and self.shots <= 0:
             raise ValueError(f"shots must be positive or None, got {self.shots}")
+        if self.noise is not None:
+            # Validates the preset name up front rather than at run time.
+            noise_spec(self.noise)
+            if self.backend != "aer":
+                raise ValueError(
+                    f"noise={self.noise!r} requires backend='aer'; the statevector "
+                    "simulator has no noise support. Silently ignoring the noise "
+                    "model would report ideal results under a noisy label."
+                )
 
     @property
     def precision(self) -> float:
@@ -97,6 +117,60 @@ class QiskitBackendAdapter:
         if self.shots is None:
             return 0.0
         return 1.0 / (self.shots**0.5)
+
+    def noise_model(self):
+        """Aer ``NoiseModel`` for this adapter, or ``None`` when running ideally."""
+        if self.noise is None:
+            return None
+        require_qiskit("Building a noise model")
+        return build_noise_model(self.noise)
+
+    def prepare(self, circuit):
+        """Transpile a circuit into a basis this backend can actually run.
+
+        Needed for two distinct reasons, both of which fail late and confusingly
+        if skipped:
+
+        * **Noise attaches to gate names.** Any gate outside the noise model's
+          basis is applied perfectly, so the run succeeds and quietly
+          under-reports the noise.
+        * **Aer cannot execute every Qiskit gate.** The XY mixer's
+          ``XXPlusYYGate`` raises ``AerError: unknown instruction: xx_plus_yy``
+          rather than being decomposed automatically.
+
+        A no-op on the statevector backend, which handles arbitrary gates and has
+        no noise to attach.
+        """
+        if self.backend != "aer":
+            return circuit
+        require_qiskit("Transpiling for the Aer backend")
+        from qiskit import transpile
+
+        basis = noise_basis_gates(self.noise) if self.noise else AER_BASIS_GATES
+        return transpile(
+            circuit,
+            basis_gates=basis,
+            optimization_level=1,
+            seed_transpiler=self.seed,
+        )
+
+    def pass_manager(self):
+        """Transpiler pass manager matching :meth:`prepare`, or ``None`` if ideal.
+
+        Needed by library code that builds and runs its own circuits -- the
+        quantum-kernel fidelity, for instance -- where there is no single circuit
+        to hand to :meth:`prepare`.
+        """
+        if self.noise is None:
+            return None
+        require_qiskit("Building a pass manager")
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+        return generate_preset_pass_manager(
+            optimization_level=1,
+            basis_gates=noise_basis_gates(self.noise),
+            seed_transpiler=self.seed,
+        )
 
     def estimator(self):
         """Return a V2 estimator primitive for expectation values."""
@@ -107,12 +181,14 @@ class QiskitBackendAdapter:
             # Aer's EstimatorV2 seeds only via run_options["seed_simulator"].
             # Passing "seed" (or backend_options["seed_simulator"]) is silently
             # accepted and ignored, leaving results non-reproducible.
-            return EstimatorV2(
-                options={
-                    "default_precision": self.precision,
-                    "run_options": {"seed_simulator": self.seed},
-                }
-            )
+            options: dict = {
+                "default_precision": self.precision,
+                "run_options": {"seed_simulator": self.seed},
+            }
+            noise = self.noise_model()
+            if noise is not None:
+                options["backend_options"] = {"noise_model": noise}
+            return EstimatorV2(options=options)
 
         from qiskit.primitives import StatevectorEstimator
 
@@ -130,7 +206,9 @@ class QiskitBackendAdapter:
         if self.backend == "aer":
             from qiskit_aer.primitives import SamplerV2
 
-            return SamplerV2(default_shots=default_shots, seed=self.seed)
+            noise = self.noise_model()
+            options = {"backend_options": {"noise_model": noise}} if noise is not None else None
+            return SamplerV2(default_shots=default_shots, seed=self.seed, options=options)
 
         from qiskit.primitives import StatevectorSampler
 
@@ -145,6 +223,8 @@ class QiskitBackendAdapter:
             "estimator_precision": self.precision,
             "exact_expectation_values": self.shots is None,
             "seed": self.seed,
+            "noise": noise_spec(self.noise).describe() if self.noise else None,
+            "ideal_device": self.noise is None,
             "qiskit_installed": qiskit_available(),
             "versions": qiskit_versions(),
         }

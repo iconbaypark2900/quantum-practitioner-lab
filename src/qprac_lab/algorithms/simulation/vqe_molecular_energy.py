@@ -139,6 +139,7 @@ def run_vqe(
     backend: str = "statevector",
     shots: int | None = None,
     seed: int = 42,
+    noise: str | None = None,
     initial_point: np.ndarray | None = None,
 ):
     """Minimise the Hamiltonian expectation value over the ansatz parameters.
@@ -148,13 +149,16 @@ def run_vqe(
     convergence plot.
     """
     require_qiskit("Running VQE")
-    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed)
+    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed, noise=noise)
     estimator = adapter.estimator()
     ansatz = build_ansatz(
         hamiltonian.num_qubits,
         kind=ansatz_kind,
         hf_bitstring=hamiltonian.hartree_fock_bitstring,
     )
+    # Transpiled once, outside the loop: into the noise basis when a device model
+    # is active, and a no-op otherwise.
+    ansatz = adapter.prepare(ansatz)
     observable = hamiltonian.qubit_operator
     history: list[float] = []
 
@@ -224,12 +228,13 @@ def run_vqe_molecular_energy_tutorial(
     optimizer: str = "COBYLA",
     maxiter: int = 300,
     seed: int = 42,
+    noise: str | None = None,
     include_dissociation_curve: bool = True,
 ) -> VQEMolecularEnergyResult:
     """Run tutorial 1 end to end: VQE for the H2 ground state."""
     require_qiskit("The VQE tutorial")
     hamiltonian = build_h2_hamiltonian(bond_length_angstrom)
-    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed)
+    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed, noise=noise)
 
     result, history, ansatz = run_vqe(
         hamiltonian,
@@ -239,6 +244,7 @@ def run_vqe_molecular_energy_tutorial(
         backend=backend,
         shots=shots,
         seed=seed,
+        noise=noise,
     )
 
     electronic = float(result.fun)

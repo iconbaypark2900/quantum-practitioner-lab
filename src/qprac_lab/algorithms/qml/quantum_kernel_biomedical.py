@@ -73,6 +73,8 @@ def build_quantum_kernel(
     entanglement: str = "linear",
     backend: str = "statevector",
     seed: int = 42,
+    noise: str | None = None,
+    shots: int = 2048,
 ):
     """Build a ZZ-feature-map fidelity kernel.
 
@@ -90,7 +92,22 @@ def build_quantum_kernel(
         reps=reps,
         entanglement=entanglement,
     )
-    kernel = FidelityQuantumKernel(feature_map=feature_map)
+    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed, noise=noise)
+    if noise is None:
+        kernel = FidelityQuantumKernel(feature_map=feature_map)
+    else:
+        # The kernel builds and runs its own compute-uncompute circuits, so the
+        # noisy sampler and a matching transpiler pass have to be injected -- a
+        # noise model alone would leave the fidelity circuits in the wrong basis
+        # and quietly under-apply the errors.
+        from qiskit_machine_learning.state_fidelities import ComputeUncompute
+
+        kernel = FidelityQuantumKernel(
+            feature_map=feature_map,
+            fidelity=ComputeUncompute(
+                sampler=adapter.sampler(shots), pass_manager=adapter.pass_manager()
+            ),
+        )
     descriptor = {
         "name": "zz_feature_map",
         "feature_dimension": feature_dimension,
@@ -99,9 +116,60 @@ def build_quantum_kernel(
         "num_qubits": feature_map.num_qubits,
         "circuit_depth": feature_map.decompose().depth(),
         "fidelity": "ComputeUncompute",
-        "backend": QiskitBackendAdapter(backend=backend, seed=seed).describe(),
+        "backend": adapter.describe(),
     }
     return kernel, descriptor
+
+
+def measure_self_fidelity(
+    x_sample,
+    embedding_dim: int,
+    reps: int = 2,
+    backend: str = "aer",
+    noise: str | None = "moderate",
+    shots: int = 2048,
+    seed: int = 42,
+) -> dict:
+    """Measure ``K(x, x)``, which should be exactly 1 and under noise is not.
+
+    Worth measuring for two reasons. It is a direct readout of circuit fidelity:
+    the compute-uncompute circuit runs the feature map forwards then backwards, so
+    the probability of returning to ``|0...0>`` is exactly how much of the state
+    survived. And ``FidelityQuantumKernel`` does not measure it by default --
+    ``evaluate_duplicates="off_diagonal"`` *assumes* the diagonal is 1 and skips
+    those circuits. On a noiseless simulator that assumption is free. Under noise
+    it makes the matrix internally inconsistent: a diagonal asserting perfect
+    self-similarity above off-diagonals that noise has pulled toward each other.
+    """
+    require_qiskit("Measuring self-fidelity")
+    from qiskit.circuit.library import zz_feature_map
+    from qiskit_machine_learning.kernels import FidelityQuantumKernel
+    from qiskit_machine_learning.state_fidelities import ComputeUncompute
+
+    feature_map = zz_feature_map(feature_dimension=embedding_dim, reps=reps)
+    adapter = QiskitBackendAdapter(backend=backend, shots=shots, seed=seed, noise=noise)
+    kernel = FidelityQuantumKernel(
+        feature_map=feature_map,
+        fidelity=ComputeUncompute(
+            sampler=adapter.sampler(shots), pass_manager=adapter.pass_manager()
+        ),
+        evaluate_duplicates="all",
+        enforce_psd=False,
+    )
+    matrix = np.asarray(kernel.evaluate(x_vec=np.asarray(x_sample)))
+    diagonal = np.diag(matrix)
+    eigenvalues = np.linalg.eigvalsh((matrix + matrix.T) / 2)
+    return {
+        "mean_self_fidelity": float(diagonal.mean()),
+        "min_self_fidelity": float(diagonal.min()),
+        "ideal_self_fidelity": 1.0,
+        "min_eigenvalue_without_psd_projection": float(eigenvalues.min()),
+        "note": (
+            "K(x,x) must be 1 by definition; the shortfall is circuit fidelity lost "
+            "to noise. A negative minimum eigenvalue means the measured matrix is "
+            "not a valid kernel and enforce_psd=True is silently repairing it."
+        ),
+    }
 
 
 def load_dataset(
@@ -173,6 +241,8 @@ def run_quantum_kernel_biomedical_tutorial(
     n_repeats: int = 4,
     backend: str = "statevector",
     seed: int = 42,
+    noise: str | None = None,
+    shots: int = 2048,
     max_preview: int = 12,
     allow_download: bool = True,
 ) -> BiomedicalKernelClassificationReport:
@@ -207,7 +277,12 @@ def run_quantum_kernel_biomedical_tutorial(
     x_angles = angle_scaler.transform(x)
 
     kernel, feature_map_descriptor = build_quantum_kernel(
-        feature_dimension=embedding_dim, reps=reps, backend=backend, seed=seed
+        feature_dimension=embedding_dim,
+        reps=reps,
+        backend=backend,
+        seed=seed,
+        noise=noise,
+        shots=shots,
     )
 
     start = time.perf_counter()
@@ -285,7 +360,9 @@ def run_quantum_kernel_biomedical_tutorial(
         algorithm="quantum_kernel_biomedical_classification",
         use_case="biomedical_kg_link_prediction",
         algorithm_type="kernel_method_qsvc",
-        backend=QiskitBackendAdapter(backend=backend, seed=seed).describe(),
+        backend=QiskitBackendAdapter(
+            backend=backend, seed=seed, noise=noise, shots=shots
+        ).describe(),
         dataset={
             "n_pairs": int(len(y)),
             "embedding_dim": embedding_dim,

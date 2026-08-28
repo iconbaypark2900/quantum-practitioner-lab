@@ -127,6 +127,14 @@ larger graph-partitioning pipelines.
 - **At shallow depth on hard instances.** QAOA's quality grows with `p`, and
   depth is precisely what noisy hardware cannot afford.
 
+One point in its favour, though: **Max-Cut is the most noise-robust method in
+this repository.** Under a heavy device noise model the expected approximation
+ratio only falls from 0.886 to 0.756, still well clear of the 0.600 random
+baseline, where VQE loses seven orders of magnitude of accuracy over the same
+range. The reason is structural -- Max-Cut needs only the *ranking* of bitstrings
+to survive, not precise amplitudes. See
+[the noise benchmark](../05-benchmarking/noise_benchmark.md).
+
 ## Source papers
 
 - Farhi, Goldstone, Gutmann, "A Quantum Approximate Optimization Algorithm"

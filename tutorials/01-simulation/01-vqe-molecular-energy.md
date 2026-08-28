@@ -188,9 +188,15 @@ correlated methods stop being optional.** Equilibrium geometries usually are not
 - **Near equilibrium with a cheap alternative available.** For H2 at 0.735 A,
   CCSD(T) gets the same answer in milliseconds on a laptop. VQE is interesting
   where classical correlated methods scale badly, not where they work fine.
+- **On noisy hardware, full stop.** Measured with a device noise model, VQE
+  misses chemical accuracy even under the *optimistic* preset: `2.2e-3` Ha
+  against a `1.6e-3` threshold, on a two-qubit circuit of depth ~10. Moderate
+  noise gives `1.1e-2`, heavy `3.7e-2`. This is the most noise-fragile method in
+  the repository, because it needs an expectation value accurate to `1e-3` and
+  depolarizing noise attacks precisely that. See
+  [the noise benchmark](../05-benchmarking/noise_benchmark.md).
 - **When you need many digits.** Shot noise sets a `1/sqrt(shots)` floor on
-  precision. Chemical accuracy on a real device is a research problem, not a
-  configuration setting.
+  precision, and it is the *smaller* of the two problems.
 - **Large hardware-efficient ansaetze.** The `efficient_su2` run needed 12
   parameters for 2 qubits. That growth, plus barren plateaus, is the central
   open obstacle to scaling VQE.

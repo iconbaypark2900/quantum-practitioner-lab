@@ -130,6 +130,15 @@ entirely, and every angle works on the objective.
 feasible", but a structural guarantee. The test suite asserts infeasible
 probability is exactly zero rather than merely small.
 
+> **On an ideal simulator.** That guarantee is a property of the ideal unitary,
+> and noise does not respect it: depolarizing and readout errors move amplitude
+> straight out of the fixed-weight subspace. Measured feasibility falls to 82.7%
+> (light noise), 46.2% (moderate), and 33.2% (heavy) -- and at heavy noise the
+> lift drops to 0.83x, *worse* than random feasible guessing. The XY mixer is
+> still the better construction, but on hardware you keep the feasibility filter
+> the penalty encoding needed. See
+> [the noise benchmark](../05-benchmarking/noise_benchmark.md).
+
 Optimality improves too, dramatically at the best depth. But read the ring rows
 carefully:
 
@@ -183,6 +192,8 @@ before anything downstream sees them.
 - **Hard constraints with the default mixer.** Penalty encoding makes constraints
   soft. If a violated budget is unacceptable rather than merely undesirable, use
   `mixer="xy"` -- it makes feasibility structural rather than incentivised.
+- **On noisy hardware, without a feasibility filter.** The XY mixer's guarantee
+  is ideal-simulator-only; measured feasibility is 46% at moderate device noise.
 - **Shallow depth.** `p = 3` on a strongly-penalised landscape is close to
   uniform sampling. QAOA quality improves with `p`, and depth is exactly what
   noisy hardware cannot afford.

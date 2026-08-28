@@ -74,5 +74,5 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Qiskit backend adapter (statevector + Aer, V2 primitives, shot control)
 - [ ] IBM Runtime backend adapter
 - [ ] CUDA-Q backend adapter
-- [ ] Noise model support (shot noise works; device noise models do not yet)
-- [ ] Benchmark all tutorials against ideal/noisy simulation
+- [x] Noise model support (depolarizing + readout presets: light/moderate/heavy)
+- [x] Benchmark all tutorials against ideal/noisy simulation (`scripts/run_noise_sweep.py`)

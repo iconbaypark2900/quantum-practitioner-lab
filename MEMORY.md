@@ -87,6 +87,29 @@ against published numbers — the qubit operator alone gives -1.857, not -1.137.
   and every fold reuses submatrices, so 20 evaluations cost the quantum time of
   one.
 
+## Noise findings (scripts/run_noise_sweep.py)
+
+| Noise | VQE error | Max-Cut E[ratio] | XY feasible | XY lift | Kernel self-fid |
+| --- | --- | --- | --- | --- | --- |
+| ideal | 5.6e-10 | 0.886 | 100% | 19.9x | 1.000 |
+| light | 2.2e-03 | 0.877 | 82.7% | 15.7x | 0.936 |
+| moderate | 1.1e-02 | 0.824 | 46.2% | 5.8x | 0.734 |
+| heavy | 3.7e-02 | 0.756 | 33.2% | 0.83x | 0.388 |
+
+- VQE is the most noise-fragile method here: even the *optimistic* preset misses
+  chemical accuracy (2.2e-3 vs 1.6e-3) on a two-qubit depth-10 circuit.
+- Max-Cut is the most robust (0.756 at heavy noise vs 0.600 random). General
+  pattern: methods needing a precise **number** break first; methods needing only
+  an **ordering** survive longest.
+- **The XY mixer's 100% feasibility guarantee does not survive noise** -- it is a
+  property of the ideal unitary. 46% at moderate, 33% at heavy, with lift falling
+  to 0.83x (worse than random feasible guessing). Keep the feasibility filter on
+  hardware.
+- `FidelityQuantumKernel` hides noise by default twice over:
+  `evaluate_duplicates="off_diagonal"` *assumes* K(x,x)=1 instead of measuring it
+  (true value 0.734 at moderate noise), and `enforce_psd=True` silently repairs a
+  genuinely non-PSD matrix (min eigenvalue about -0.03).
+
 ## Performance trap worth remembering
 
 `QAOAAnsatz` holds `PauliEvolutionGate`s whose synthesis is redone on **every**
@@ -96,6 +119,13 @@ estimator call. Measured at 2.56s per call versus 0.006s after a one-time
 
 Similarly, Aer's `EstimatorV2` seeds only via `run_options["seed_simulator"]`;
 a plain `seed` key is accepted and ignored, leaving runs irreproducible.
+
+Two more Aer traps: noise attaches to gate *names*, so an untranspiled circuit
+has out-of-basis gates applied perfectly and under-reports noise; and Aer cannot
+execute `XXPlusYYGate` at all (`AerError: unknown instruction: xx_plus_yy`).
+`QiskitBackendAdapter.prepare()` transpiles for both reasons, on any Aer run.
+Noisy simulation is 60-90x slower than statevector (density matrix), which is why
+the tutorials default to ideal and the sweep uses a smaller optimiser budget.
 
 ## Dataset provenance
 
@@ -110,4 +140,4 @@ positives. Features use only compound--gene and gene--disease edges — `CtD` an
 - Notebook walkthroughs for the finished tutorials.
 - Dicke-state warm start for the XY mixer, to replace the single k-hot basis
   state and reduce the depth sensitivity seen above.
-- Noise models, then IBM Runtime and CUDA-Q adapters.
+- IBM Runtime and CUDA-Q adapters.
