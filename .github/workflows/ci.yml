@@ -38,6 +38,11 @@ jobs:
           python-version: "3.13"
           cache: pip
       - run: pip install -e ".[dev,qiskit,nature]"
+      # Best-effort: the Hetionet-backed tests skip themselves when the data is
+      # absent, so a flaky network slows coverage rather than failing the build.
+      - name: fetch Hetionet (optional)
+        continue-on-error: true
+        run: python scripts/download_data.py
       - run: pytest -q
       - name: generate tutorial artifacts
         run: python scripts/run_first_three_tutorial_outputs.py

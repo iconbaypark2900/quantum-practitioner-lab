@@ -41,13 +41,16 @@ def make_biomedical_pair_features(
     embedding_dim: int = 4,
     random_state: int = 42,
 ):
-    """Create KG-style pair features for biomedical link prediction demos.
+    """Gaussian-blob stand-in for KG pair features -- an offline fallback only.
 
-    This is a synthetic stand-in for features such as:
-    - drug embedding
-    - disease embedding
-    - gene embedding
-    - pairwise interaction features
+    Superseded by :func:`qprac_lab.data.hetionet.make_hetionet_link_prediction_dataset`,
+    which builds real drug--disease features from Hetionet. Kept for environments
+    without the downloaded data.
+
+    Do not draw conclusions from it. ``make_classification`` blobs are close to
+    the ideal geometry for an RBF kernel, so a quantum-versus-classical
+    comparison run here measures the generator rather than the methods -- as the
+    quantum-kernel tutorial found when the two datasets disagreed.
     """
     return make_binary_classification_dataset(
         n_samples=n_pairs,

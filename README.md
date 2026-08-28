@@ -23,7 +23,7 @@ CLI:                qprac-lab
 | VQE for molecular energy | **Implemented** — Qiskit V2 `Estimator`, real H2 Hamiltonian |
 | QAOA for portfolio selection | **Implemented** — QUBO → Ising → `QAOAAnsatz` → sampling, with a constraint-preserving XY mixer |
 | QAOA for Max-Cut | **Implemented** — the unconstrained reference problem |
-| Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel` |
+| Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel`, on real Hetionet data |
 | PDEs, ADAPT-VQE, Trotter, VQC | Classical scaffolds only |
 | IBM Runtime / CUDA-Q backends | Placeholders |
 
@@ -47,6 +47,9 @@ pip install -e ".[dev,qiskit]"
 
 # Optional: real molecular Hamiltonians at any bond length (PySCF).
 pip install -e ".[nature]"
+
+# Optional: real Hetionet data for the quantum-kernel tutorial (~12 MB).
+python scripts/download_data.py
 
 pytest
 python scripts/run_demo.py --algorithm qaoa_portfolio_selection
@@ -102,16 +105,24 @@ python scripts/run_demo.py --algorithm qaoa_portfolio_selection
 
 ### 3. Quantum Kernel for Biomedical Classification
 
-ZZ feature map + fidelity kernel + precomputed-kernel SVM for KG link prediction.
+ZZ feature map + fidelity kernel + precomputed-kernel SVM, predicting real
+`Compound–treats–Disease` edges from [Hetionet](https://het.io) (CC0).
 
 - Baselines: RBF-SVM, Random Forest, optional XGBoost
-- Result: **RBF-SVM wins** (ROC-AUC 0.826 vs 0.694), at ~1675x less compute
-- Finding: kernel-target alignment (0.0906 quantum vs 0.1356 RBF) predicted the
-  loss before any classifier was fitted — one matrix multiply as a go/no-go check
-- Papers: Havlíček (quantum kernels), Huang (when they help), Cristianini
-  (alignment)
+- Evaluation: 5×4 repeated stratified CV — a single split on data this small
+  swings ROC-AUC by more than the gap between the models
+- Result: quantum kernel ranks first (0.587 ± 0.096 vs RBF 0.577 ± 0.076) but
+  wins only 12/20 paired folds. **A statistical tie**, reported as
+  `difference_exceeds_noise: false`.
+- Finding: this reversed the earlier Gaussian-blob result, which had RBF winning
+  clearly — that conclusion was an artifact of the generator, not the method
+- Honesty check: negatives are degree-matched, so degree alone scores 0.538
+  instead of 0.689. The dataset reports this rather than asserting it.
+- Papers: Havlíček (quantum kernels), Himmelstein (Hetionet), Huang (when they
+  help), Cristianini (alignment)
 
 ```bash
+python scripts/download_data.py    # ~12 MB, once
 python scripts/run_demo.py --algorithm quantum_kernel_biomedical
 ```
 

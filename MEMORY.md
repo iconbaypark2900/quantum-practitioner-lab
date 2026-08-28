@@ -69,9 +69,23 @@ against published numbers — the qubit operator alone gives -1.857, not -1.137.
 - **QAOA Max-Cut**: 0.905 expected approximation ratio vs 0.600 for random
   assignment, 49.7% of shots optimal. Greedy also ties the exact optimum
   instantly, which is what an 8-vertex problem looks like.
-- **Quantum kernel**: loses to RBF-SVM (ROC-AUC 0.694 vs 0.826) at ~1675x the
-  compute. Kernel-target alignment (0.0906 vs 0.1356) predicted this before any
-  classifier was fitted — use it as a cheap go/no-go check.
+- **Quantum kernel**: on **real Hetionet** drug--disease link prediction it ranks
+  first (0.587 +/- 0.096 vs RBF 0.577 +/- 0.076) but wins only 12/20 paired folds
+  — a statistical tie, reported as `difference_exceeds_noise: false`. This
+  **reversed** the earlier Gaussian-blob result (RBF 0.826 vs quantum 0.694):
+  that conclusion was an artifact of the generator, since blob geometry is near
+  ideal for RBF. Kernel-target alignment predicted the ranking correctly in both
+  cases (blobs 0.091 vs 0.136; Hetionet 0.027 vs 0.010).
+- **Benchmark construction matters more than the algorithm here.** With uniform
+  random negatives, node degree alone scores 0.689 — a classifier can look good
+  knowing only how well studied a compound is. Degree-matched negatives drop that
+  to 0.538 and the biology score from 0.729 to 0.616. The task got harder and the
+  numbers got worse, which is what fixing a benchmark looks like.
+- **A single split cannot resolve this.** On 80 samples, test ROC-AUC ranged
+  0.54-0.85 across split seeds alone — wider than any gap between models. The
+  tutorial uses 5x4 repeated CV; the full n x n quantum kernel is computed once
+  and every fold reuses submatrices, so 20 evaluations cost the quantum time of
+  one.
 
 ## Performance trap worth remembering
 
@@ -83,13 +97,17 @@ estimator call. Measured at 2.56s per call versus 0.006s after a one-time
 Similarly, Aer's `EstimatorV2` seeds only via `run_options["seed_simulator"]`;
 a plain `seed` key is accepted and ignored, leaving runs irreproducible.
 
+## Dataset provenance
+
+Hetionet v1.0 (Himmelstein et al., eLife 2017), CC0. Cached to `data/raw`
+(gitignored, ~12 MB) by `python scripts/download_data.py`; override the location
+with `QPRAC_DATA_DIR`. Target edge type `CtD` (Compound-treats-Disease), 755
+positives. Features use only compound--gene and gene--disease edges — `CtD` and
+`CpD` (palliates) are both excluded, so there is no label path to mask per split.
+
 ## Next milestone
 
 - Notebook walkthroughs for the finished tutorials.
-- A genuinely KG-derived biomedical dataset; the current features are synthetic
-  Gaussian blobs, which is exactly the geometry RBF is best at. This is the
-  biggest remaining integrity gap — tutorial 3's conclusion is currently an
-  artifact of the data generator.
 - Dicke-state warm start for the XY mixer, to replace the single k-hot basis
   state and reduce the depth sensitivity seen above.
 - Noise models, then IBM Runtime and CUDA-Q adapters.

@@ -216,27 +216,35 @@ def plot_model_comparison(
     ranking: list[dict],
     output_path: str = "results/kernel_model_comparison.png",
 ):
-    """ROC-AUC of the quantum kernel against every classical baseline."""
+    """ROC-AUC of the quantum kernel against every classical baseline.
+
+    Error bars are not decoration here. The gap between the quantum kernel and
+    RBF is around 0.01 ROC-AUC while the fold-to-fold standard deviation is
+    nearly 0.10, so a bare bar chart would imply a decisive win the data does not
+    support. Drawing the spread makes the overlap impossible to miss.
+    """
     if not ranking:
         return None
     _prepare(output_path)
     models = [row["model"] for row in ranking]
     scores = [row["roc_auc"] or 0.0 for row in ranking]
+    errors = [row.get("roc_auc_std") or 0.0 for row in ranking]
     colors = ["#1f77b4" if m == "quantum_kernel_svm" else "#7f7f7f" for m in models]
 
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.barh(range(len(models)), scores, color=colors)
+    fig, ax = plt.subplots(figsize=(7.5, 4))
+    ax.barh(range(len(models)), scores, xerr=errors, color=colors, capsize=4,
+            error_kw={"ecolor": "#333333", "lw": 1.2})
     ax.set_yticks(range(len(models)))
     ax.set_yticklabels(models)
     ax.invert_yaxis()
     ax.axvline(0.5, color="black", linestyle=":", label="Random classifier")
     ax.set_xlim(0, 1)
-    ax.set_xlabel("ROC-AUC")
+    ax.set_xlabel("ROC-AUC (mean $\\pm$ s.d. over cross-validation folds)")
     ax.set_title("Quantum kernel vs classical baselines")
     ax.legend(loc="lower right", fontsize=8)
     ax.grid(alpha=0.3, axis="x")
-    for index, score in enumerate(scores):
-        ax.text(score + 0.01, index, f"{score:.3f}", va="center", fontsize=8)
+    for index, (score, error) in enumerate(zip(scores, errors, strict=True)):
+        ax.text(min(score + error + 0.02, 0.97), index, f"{score:.3f}", va="center", fontsize=8)
     fig.tight_layout()
     fig.savefig(output_path, dpi=150)
     plt.close(fig)

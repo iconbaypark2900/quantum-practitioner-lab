@@ -57,9 +57,13 @@ def main() -> int:
 
     print("[3/3] Quantum kernel for biomedical classification ...", flush=True)
     kernel = run_quantum_kernel_biomedical_tutorial()
+    comparison = kernel.quantum_vs_rbf
     print(
-        f"      best model: {kernel.best_model} "
-        f"(quantum beats all classical: {kernel.quantum_beats_all_classical})"
+        f"      dataset: {kernel.dataset['name']} (real data: {kernel.dataset['real_data']})\n"
+        f"      best model: {kernel.best_model}; quantum vs rbf "
+        f"{comparison['mean_roc_auc_difference']:+.4f} ROC-AUC over "
+        f"{comparison['comparable_folds']} folds, "
+        f"exceeds noise: {comparison['difference_exceeds_noise']}"
     )
 
     outputs = {

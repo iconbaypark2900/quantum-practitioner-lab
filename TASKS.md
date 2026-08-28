@@ -51,7 +51,9 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add Qiskit FidelityQuantumKernel
 - [x] Add QSVC (via `SVC(kernel="precomputed")`, which is what QSVC wraps)
 - [x] Add kernel-target alignment as a pre-training go/no-go check
-- [ ] Add biomedical KG-shaped dataset loader (still synthetic blobs)
+- [x] Add biomedical KG dataset loader (real Hetionet CtD link prediction)
+- [x] Add degree-matched negative sampling and a leakage diagnostic
+- [x] Replace the single train/test split with repeated cross-validation
 - [ ] Add notebook walkthrough
 
 ## Phase 3: Implement secondary tutorials

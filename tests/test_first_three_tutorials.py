@@ -21,6 +21,7 @@ from qprac_lab.algorithms.simulation.vqe_molecular_energy import (  # noqa: E402
     CHEMICAL_ACCURACY_HARTREE,
     run_vqe_molecular_energy_tutorial,
 )
+from qprac_lab.data.hetionet import hetionet_available  # noqa: E402
 
 #: Reference H2 / STO-3G values at R = 0.735 A, cross-checked against PySCF.
 H2_FCI_ENERGY = -1.137306
@@ -92,7 +93,15 @@ def test_qaoa_penalty_produces_mostly_feasible_samples(qaoa_result):
 
 @pytest.fixture(scope="module")
 def kernel_result():
-    return run_quantum_kernel_biomedical_tutorial(n_pairs=40)
+    """Kernel *properties* are dataset-independent, so use the fast offline path.
+
+    Behaviour on the real Hetionet data is covered by
+    ``test_quantum_kernel_runs_on_real_hetionet_data`` and by
+    ``tests/test_hetionet_dataset.py``.
+    """
+    return run_quantum_kernel_biomedical_tutorial(
+        dataset="synthetic", n_pairs=40, n_splits=3, n_repeats=1
+    )
 
 
 def test_quantum_kernel_tutorial_reports_every_baseline(kernel_result):
@@ -114,6 +123,35 @@ def test_quantum_kernel_matrix_is_a_valid_kernel(kernel_result):
     assert np.allclose(np.diag(matrix), 1.0, atol=1e-6)
     assert matrix.min() >= -1e-9
     assert matrix.max() <= 1.0 + 1e-9
+
+
+def test_quantum_kernel_evaluation_is_repeated_not_a_single_split(kernel_result):
+    """A single split on data this small is uninformative; the report must say how
+    many evaluations back its numbers."""
+    assert kernel_result.evaluation["n_evaluations"] == 3
+    assert kernel_result.quantum_kernel_metrics["n_evaluations"] == 3
+    assert kernel_result.quantum_kernel_metrics["roc_auc_std"] is not None
+
+
+def test_synthetic_dataset_is_labelled_as_not_real(kernel_result):
+    """The blob fallback must never be mistaken for the real benchmark."""
+    assert kernel_result.dataset["real_data"] is False
+    assert "artifact" in kernel_result.dataset["warning"]
+
+
+@pytest.mark.skipif(
+    not hetionet_available(),
+    reason="Hetionet not cached; run `python scripts/download_data.py`",
+)
+def test_quantum_kernel_runs_on_real_hetionet_data():
+    result = run_quantum_kernel_biomedical_tutorial(n_pairs=60, n_splits=3, n_repeats=1)
+    assert result.dataset["real_data"] is True
+    assert result.dataset["target_edge_type"].startswith("CtD")
+    assert result.dataset["degree_only_roc_auc"] < 0.60
+    comparison = result.quantum_vs_rbf
+    assert comparison["comparable_folds"] == 3
+    assert -1.0 <= comparison["mean_roc_auc_difference"] <= 1.0
+    assert 0.0 <= comparison["quantum_win_rate"] <= 1.0
 
 
 def test_quantum_kernel_ranking_is_ordered_and_complete(kernel_result):
