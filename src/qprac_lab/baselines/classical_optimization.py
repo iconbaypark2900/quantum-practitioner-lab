@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from itertools import product
 import math
 import random
+from itertools import product
+
 import numpy as np
 
 
@@ -52,7 +53,12 @@ def brute_force_portfolio(expected_returns, covariance, risk_lambda: float = 0.5
     return {"selection": best_x, "objective_value": best_value}
 
 
-def greedy_portfolio_selection(expected_returns, covariance, budget: int = 3, risk_lambda: float = 0.5):
+def greedy_portfolio_selection(
+    expected_returns,
+    covariance,
+    budget: int = 3,
+    risk_lambda: float = 0.5,
+):
     """Greedy baseline using return ranking.
 
     Algorithm type:
@@ -61,7 +67,10 @@ def greedy_portfolio_selection(expected_returns, covariance, budget: int = 3, ri
     selected = np.argsort(expected_returns)[-budget:]
     x = np.zeros(len(expected_returns), dtype=int)
     x[selected] = 1
-    return {"selection": x, "objective_value": portfolio_objective(x, expected_returns, covariance, risk_lambda)}
+    return {
+        "selection": x,
+        "objective_value": portfolio_objective(x, expected_returns, covariance, risk_lambda),
+    }
 
 
 def simulated_annealing_portfolio(

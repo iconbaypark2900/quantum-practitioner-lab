@@ -1,6 +1,8 @@
-from qprac_lab.algorithms.pdes.hhl_intro import run_hhl_intro_scaffold
-from qprac_lab.algorithms.pdes.variational_heat_equation import run_variational_heat_equation_scaffold
 from qprac_lab.algorithms.optimization.qaoa_maxcut import run_qaoa_maxcut_scaffold
+from qprac_lab.algorithms.pdes.hhl_intro import run_hhl_intro_scaffold
+from qprac_lab.algorithms.pdes.variational_heat_equation import (
+    run_variational_heat_equation_scaffold,
+)
 
 
 def test_hhl_intro_runs():

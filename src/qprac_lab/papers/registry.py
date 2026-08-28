@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-
 PAPER_REGISTRY = {
     "vqe": [
         "Peruzzo et al. — A variational eigenvalue solver on a photonic quantum processor",
-        "Grimsley et al. — An adaptive variational algorithm for exact molecular simulations on a quantum computer",
+        "Grimsley et al. — An adaptive variational algorithm for exact molecular "
+        "simulations on a quantum computer",
     ],
     "qaoa": [
         "Farhi, Goldstone, Gutmann — A Quantum Approximate Optimization Algorithm",

@@ -20,6 +20,8 @@ def run_variational_heat_equation_scaffold():
     u1 = finite_difference_heat_step(u0, alpha=0.1, dx=dx, dt=0.0005)
     return {
         "algorithm": "variational_heat_equation",
+        "use_case": "thermal_diffusion_simulation",
+        "algorithm_type": "variational_pde_residual_minimization",
         "status": "finite_difference_baseline_ready",
         "initial_norm": float(np.linalg.norm(u0)),
         "next_norm": float(np.linalg.norm(u1)),
