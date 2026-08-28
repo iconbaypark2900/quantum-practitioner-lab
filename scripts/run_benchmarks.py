@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sys
 
+from qprac_lab.algorithms.optimization.qaoa_maxcut import run_qaoa_maxcut_tutorial
 from qprac_lab.algorithms.optimization.qaoa_portfolio_selection import (
     run_qaoa_portfolio_selection_tutorial,
 )
@@ -26,6 +27,7 @@ from qprac_lab.benchmarks.runner import run_and_time, save_benchmark_results
 QUANTUM_JOBS = [
     ("vqe_molecular_energy", run_vqe_molecular_energy_tutorial),
     ("qaoa_portfolio_selection", run_qaoa_portfolio_selection_tutorial),
+    ("qaoa_maxcut", run_qaoa_maxcut_tutorial),
     ("quantum_kernel_biomedical", run_quantum_kernel_biomedical_tutorial),
 ]
 

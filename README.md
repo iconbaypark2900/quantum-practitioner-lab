@@ -21,9 +21,10 @@ CLI:                qprac-lab
 | Area | State |
 | --- | --- |
 | VQE for molecular energy | **Implemented** — Qiskit V2 `Estimator`, real H2 Hamiltonian |
-| QAOA for portfolio selection | **Implemented** — QUBO → Ising → `QAOAAnsatz` → sampling |
+| QAOA for portfolio selection | **Implemented** — QUBO → Ising → `QAOAAnsatz` → sampling, with a constraint-preserving XY mixer |
+| QAOA for Max-Cut | **Implemented** — the unconstrained reference problem |
 | Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel` |
-| PDEs, ADAPT-VQE, Trotter, VQC, Max-Cut | Classical scaffolds only |
+| PDEs, ADAPT-VQE, Trotter, VQC | Classical scaffolds only |
 | IBM Runtime / CUDA-Q backends | Placeholders |
 
 `qprac-lab list` prints which is which. Nothing is labelled quantum unless it
@@ -87,10 +88,12 @@ Budget-constrained mean-variance selection, encoded as a QUBO with a penalty
 term, mapped to an Ising Hamiltonian, solved with `QAOAAnsatz`.
 
 - Baselines: brute force, greedy, simulated annealing
-- Result: finds the exact optimum, 99.3% of samples feasible
-- Finding: **1.12x lift over uniform sampling of feasible portfolios**. A large
-  penalty buys feasibility but flattens the distribution; a small one sharpens it
-  and breaks feasibility. Reported by default so the result cannot be oversold.
+- Result: finds the exact optimum
+- Finding: with the textbook penalty encoding, only a **1.05x lift over uniform
+  sampling of feasible portfolios** — it learns feasibility and little else.
+  Switching to an **XY mixer** (`mixer="xy"`) makes feasibility structural:
+  **exactly 100%** at every depth, and up to a 20x lift on optimality. Reported
+  by default so neither result can be oversold.
 - Papers: Farhi (QAOA), Hadfield (constraint-preserving mixers)
 
 ```bash
@@ -110,6 +113,22 @@ ZZ feature map + fidelity kernel + precomputed-kernel SVM for KG link prediction
 
 ```bash
 python scripts/run_demo.py --algorithm quantum_kernel_biomedical
+```
+
+### 4. QAOA for Max-Cut
+
+The unconstrained reference problem — positive objective, no penalty term, so the
+plain approximation ratio is meaningful. Start here before the portfolio tutorial.
+
+- Baselines: brute force, greedy, random assignment (`|E|/2`)
+- Result: **0.905 expected approximation ratio** vs 0.600 for random guessing,
+  with 49.7% of shots on an optimal cut
+- Finding: greedy also hits the exact optimum, instantly. On an 8-vertex graph
+  the quantum method has nothing to offer — which is what that size looks like.
+- Papers: Farhi (QAOA), Goemans-Williamson (the 0.878 classical guarantee)
+
+```bash
+python scripts/run_demo.py --algorithm qaoa_maxcut
 ```
 
 ## Generating artifacts

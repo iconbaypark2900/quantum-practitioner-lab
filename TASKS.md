@@ -39,7 +39,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add Qiskit QAOA/Sampler implementation
 - [x] Add sampling-quality metrics (feasible rate, lift over uniform)
 - [ ] Add notebook walkthrough
-- [ ] Add XY mixer to preserve the cardinality constraint by construction
+- [x] Add XY mixer to preserve the cardinality constraint by construction
 
 ### Quantum Kernel for Biomedical Classification
 
@@ -59,7 +59,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [ ] ADAPT-VQE
 - [x] Hamiltonians and expectation values (`hamiltonian_utils`)
 - [ ] Trotterization
-- [ ] QAOA Max-Cut (QUBO builder is ready; the QAOA loop is reusable)
+- [x] QAOA Max-Cut
 - [x] QUBO / Ising mapping
 - [ ] HHL intro
 - [ ] Variational heat equation

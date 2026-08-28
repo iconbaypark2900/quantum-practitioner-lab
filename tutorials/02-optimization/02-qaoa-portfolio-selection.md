@@ -89,40 +89,65 @@ covariance term entirely, so it happily picks three correlated assets.
 
 ## Benchmark
 
-`n = 6`, `budget = 3`, 4096 shots, statevector simulator:
+`n = 6`, `budget = 3`, 4096 shots, statevector simulator. There are 20 feasible
+portfolios, so **random guessing among feasible states hits the optimum 5% of the
+time** -- that is the bar, and the `Lift` column measures against it.
 
-| Penalty | p | Feasible | Hits optimum | Uniform baseline | Lift |
+| Mixer | Penalty | p | Feasible | Hits optimum | Lift |
 | --- | --- | --- | --- | --- | --- |
-| 6.17 (auto) | 3 | 99.3% | 5.59% | 5.00% | **1.12x** |
-| 6.17 (auto) | 6 | 86.0% | 7.06% | 5.00% | 1.41x |
-| 2.00 | 6 | 98.8% | 5.52% | 5.00% | 1.10x |
-| 0.50 | 6 | 77.2% | 9.23% | 5.00% | **1.85x** |
+| Transverse field | 6.17 (auto) | 3 | 94.7% | 5.27% | 1.05x |
+| Transverse field | 6.17 (auto) | 6 | 99.7% | 5.20% | 1.04x |
+| Transverse field | 0.50 | 6 | 54.8% | 9.91% | 1.98x |
+| XY ring | none | 3 | **100%** | 3.52% | 0.70x |
+| XY ring | none | 4 | **100%** | 4.74% | 0.95x |
+| XY ring | none | 6 | **100%** | **100%** | **20.0x** |
+| XY ring | none | 8 | **100%** | 16.67% | 3.33x |
+| XY complete | none | 3 | **100%** | 7.35% | 1.47x |
+| XY complete | none | 6 | **100%** | 37.52% | 7.50x |
 
-Reproduce with `run_qaoa_portfolio_selection_tutorial(penalty=..., reps=...)`;
-all runs use the default `seed=42`. Every row found the exact optimum among its
-samples — the differences are entirely in how much probability mass landed there.
+Every row found the optimum somewhere in its samples. The differences are
+entirely in how much probability mass landed there.
 
-The `Uniform baseline` column is the honest comparison and is the reason it is
-reported by default. There are 20 feasible portfolios, so **guessing a feasible
-portfolio at random hits the optimum 5% of the time.** Any QAOA configuration
-scoring near 5% has learned feasibility and nothing else.
+### The penalty encoding barely works
 
-At the safe default penalty, QAOA achieves 99.3% feasibility and a lift of
-**1.12x** -- it is barely better than random guessing among feasible states. The
-sampling-distribution plot shows this directly: every bar sits on the uniform
-line.
+At the safe automatic penalty, QAOA reaches ~1.05x. It is **doing almost nothing
+beyond learning feasibility**. The reason is a scale mismatch: feasibility is
+worth `P = 6.17`, while the entire spread of objective values across all feasible
+portfolios is about 2.1. The penalty dominates the landscape, and the optimiser
+spends its angles on the constraint.
 
-This is a real tension, not a tuning failure:
+Lowering the penalty to 0.5 doubles the lift to 1.98x -- and drops feasibility to
+55%. You are trading one failure for another.
 
-- **A large penalty dominates the cost landscape.** Feasibility is worth `P`
-  while the entire spread of objective values across feasible portfolios is about
-  `2.1`. With `P = 6.17`, QAOA spends its expressive power on the constraint and
-  is left nearly flat over what remains.
-- **A small penalty sharpens the distribution and breaks feasibility.** At
-  `P = 0.5` the lift rises to 1.85x, but 23% of samples violate the budget.
+### The XY mixer removes the tradeoff
 
-Both configurations *find* the optimum among their samples. Neither concentrates
-much probability on it.
+`(X_i X_j + Y_i Y_j)/2` commutes with the total number operator, so evolution
+under it cannot change Hamming weight. Start in a 3-hot state and the
+optimisation *cannot leave* the feasible subspace. The penalty term disappears
+entirely, and every angle works on the objective.
+
+**Feasibility is exactly 100% at every depth and topology** -- not "mostly
+feasible", but a structural guarantee. The test suite asserts infeasible
+probability is exactly zero rather than merely small.
+
+Optimality improves too, dramatically at the best depth. But read the ring rows
+carefully:
+
+```text
+p = 3 -> 3.52%      p = 4 -> 4.74%      p = 6 -> 100%      p = 8 -> 16.67%
+```
+
+**That is not monotonic, and `p = 6` is not special.** All rows start from the
+same fixed linear-ramp warm start, and COBYLA settles into different local optima
+from it at different depths. The 20x row is real and reproducible across sampling
+seeds, but it is a property of *this warm start on this instance*, not a
+depth you should expect to transfer. The complete-graph topology behaves far more
+predictably (1.47x -> 7.50x) because it mixes the whole feasible subspace in a
+single layer, where the ring needs several.
+
+The cost is circuit depth: two-qubit XY rotations instead of single-qubit X
+rotations, and `n(n-1)/2` of them per layer for the complete topology. On real
+hardware that is exactly the resource you do not have.
 
 ## Visualization
 
@@ -155,10 +180,9 @@ before anything downstream sees them.
 - **When simulated annealing already ties.** It matched the exact optimum here
   in milliseconds. That is the bar a real quantum advantage claim has to clear,
   not brute force.
-- **Hard constraints.** Penalty encoding makes constraints soft. If a violated
-  budget is unacceptable rather than merely undesirable, you need a
-  constraint-preserving mixer (XY mixers keep the state in the fixed-cardinality
-  subspace) or a different method.
+- **Hard constraints with the default mixer.** Penalty encoding makes constraints
+  soft. If a violated budget is unacceptable rather than merely undesirable, use
+  `mixer="xy"` -- it makes feasibility structural rather than incentivised.
 - **Shallow depth.** `p = 3` on a strongly-penalised landscape is close to
   uniform sampling. QAOA quality improves with `p`, and depth is exactly what
   noisy hardware cannot afford.

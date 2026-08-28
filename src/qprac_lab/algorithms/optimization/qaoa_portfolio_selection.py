@@ -34,6 +34,7 @@ from qprac_lab.baselines.classical_optimization import (
     portfolio_objective,
     simulated_annealing_portfolio,
 )
+from qprac_lab.circuits.mixers import build_xy_qaoa_ansatz
 from qprac_lab.metrics.optimization import constraint_report, normalized_approximation_ratio
 
 
@@ -47,6 +48,7 @@ class PortfolioSelectionReport:
     backend: dict
     problem: dict
     qaoa_reps: int
+    mixer: str
     optimizer: str
     function_evaluations: int
     optimal_parameters: list[float]
@@ -90,16 +92,44 @@ def run_qaoa(
     backend: str = "statevector",
     shots: int = 4096,
     seed: int = 42,
+    mixer: str = "transverse_field",
+    num_ones: int | None = None,
+    xy_topology: str = "ring",
+    gamma_scale: float | None = None,
 ):
     """Optimise QAOA angles for a QUBO, then sample the optimised state.
+
+    ``mixer`` selects how constraints are handled:
+
+    ``transverse_field``
+        The standard ``sum_i X_i`` mixer. Explores every bitstring, so hard
+        constraints must already be penalties inside ``qubo``.
+    ``xy``
+        A Hamming-weight-preserving XY mixer over a ``num_ones``-hot subspace.
+        Feasibility holds by construction, so ``qubo`` should carry **no**
+        penalty term.
 
     Returns ``(scipy_result, counts, history, offset)``.
     """
     require_qiskit("Running QAOA")
-    from qiskit.circuit.library import QAOAAnsatz
 
     cost_operator, offset = qubo.to_ising()
-    ansatz = QAOAAnsatz(cost_operator=cost_operator, reps=reps)
+    if mixer == "xy":
+        if num_ones is None:
+            raise ValueError("the xy mixer needs num_ones (the Hamming weight to preserve)")
+        ansatz = build_xy_qaoa_ansatz(
+            cost_operator, reps=reps, num_ones=num_ones, topology=xy_topology
+        )
+    elif mixer == "transverse_field":
+        from qiskit.circuit.library import QAOAAnsatz
+
+        # Decompose once, up front. QAOAAnsatz holds PauliEvolutionGates whose
+        # synthesis is otherwise redone on every estimator call -- measured at
+        # 2.56s per call versus 0.006s pre-decomposed on an 8-qubit graph, a
+        # ~400x difference that turns a 2-second optimisation into 13 minutes.
+        ansatz = QAOAAnsatz(cost_operator=cost_operator, reps=reps).decompose(reps=3)
+    else:
+        raise ValueError(f"Unknown mixer {mixer!r}; expected 'transverse_field' or 'xy'")
     adapter = QiskitBackendAdapter(backend=backend, shots=None, seed=seed)
     estimator = adapter.estimator()
     history: list[float] = []
@@ -110,9 +140,16 @@ def run_qaoa(
         history.append(value)
         return value
 
+    if gamma_scale is None:
+        # Scale the opening gamma to the cost operator's magnitude. A gamma tuned
+        # for a penalty-dominated operator is far too small once the penalty is
+        # removed, and the optimiser starts on a flat patch of landscape.
+        largest = max(float(np.max(np.abs(np.real(cost_operator.coeffs)))), 1e-12)
+        gamma_scale = 1.0 / largest
+
     result = minimize(
         objective,
-        x0=qaoa_initial_point(reps),
+        x0=qaoa_initial_point(reps, gamma_scale=gamma_scale),
         method=optimizer,
         options={"maxiter": maxiter},
     )
@@ -145,6 +182,8 @@ def run_qaoa_portfolio_selection_tutorial(
     budget: int = 3,
     risk_lambda: float = 0.5,
     reps: int = 3,
+    mixer: str = "transverse_field",
+    xy_topology: str = "ring",
     penalty: float | None = None,
     backend: str = "statevector",
     shots: int = 4096,
@@ -157,6 +196,11 @@ def run_qaoa_portfolio_selection_tutorial(
     from qprac_lab.data.synthetic import make_small_portfolio_dataset
 
     expected_returns, covariance = make_small_portfolio_dataset(n_assets=n_assets)
+    if mixer == "xy" and penalty is None:
+        # The XY mixer enforces the budget structurally, so a penalty term would
+        # only add a constant over the feasible subspace while distorting the
+        # landscape the optimiser sees.
+        penalty = 0.0
     qubo = portfolio_qubo(
         expected_returns,
         covariance,
@@ -173,6 +217,9 @@ def run_qaoa_portfolio_selection_tutorial(
         backend=backend,
         shots=shots,
         seed=seed,
+        mixer=mixer,
+        num_ones=budget if mixer == "xy" else None,
+        xy_topology=xy_topology,
     )
 
     total_shots = sum(counts.values())
@@ -265,6 +312,7 @@ def run_qaoa_portfolio_selection_tutorial(
             "expected_returns": np.asarray(expected_returns).round(6).tolist(),
         },
         qaoa_reps=reps,
+        mixer=f"{mixer}:{xy_topology}" if mixer == "xy" else mixer,
         optimizer=optimizer,
         function_evaluations=len(history),
         optimal_parameters=[float(v) for v in np.atleast_1d(result.x)],
@@ -294,6 +342,10 @@ def run_qaoa_portfolio_selection_tutorial(
             "optimal_probability_lift": (
                 "optimal_probability divided by uniform sampling over feasible "
                 "portfolios; 1.0 means QAOA did no better than random feasible guessing"
+            ),
+            "mixer": (
+                "transverse_field explores all bitstrings and needs a penalty term; "
+                "xy preserves Hamming weight so feasibility is guaranteed by construction"
             ),
             "penalty_tradeoff": (
                 "a large penalty buys feasibility but flattens the distribution over "

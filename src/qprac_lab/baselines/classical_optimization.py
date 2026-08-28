@@ -25,6 +25,26 @@ def brute_force_maxcut(n_nodes: int, edges: list[tuple[int, int]]):
     return {"bitstring": best_bitstring, "objective_value": best_value}
 
 
+def greedy_maxcut(n_nodes: int, edges: list[tuple[int, int]]):
+    """Greedy Max-Cut heuristic: place each node on whichever side cuts more edges.
+
+    A fast, decent baseline -- and the realistic comparison for QAOA, since
+    brute force stops being available long before QAOA becomes interesting.
+    """
+    assignment = ["0"] * n_nodes
+    for node in range(n_nodes):
+        gains = {"0": 0, "1": 0}
+        for i, j in edges:
+            neighbour = j if i == node else i if j == node else None
+            if neighbour is None or neighbour >= node:
+                continue
+            for side in ("0", "1"):
+                gains[side] += assignment[neighbour] != side
+        assignment[node] = "0" if gains["0"] >= gains["1"] else "1"
+    bitstring = "".join(assignment)
+    return {"bitstring": bitstring, "objective_value": maxcut_value(bitstring, edges)}
+
+
 def portfolio_objective(x, expected_returns, covariance, risk_lambda: float = 0.5) -> float:
     """Portfolio binary objective: return minus risk penalty."""
     x = np.asarray(x)

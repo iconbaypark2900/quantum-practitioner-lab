@@ -2,9 +2,10 @@
 
 ## Current state
 
-The three priority tutorials are **real quantum implementations**, not scaffolds.
-Secondary tutorials (PDEs, ADAPT-VQE, Trotter, VQC, Max-Cut) are still classical
-scaffolds and are labelled as such by `qprac-lab list`.
+The three priority tutorials plus QAOA Max-Cut are **real quantum
+implementations**, not scaffolds. Remaining secondary tutorials (PDEs,
+ADAPT-VQE, Trotter, VQC) are still classical scaffolds and are labelled as such
+by `qprac-lab list`.
 
 ## Stack decision
 
@@ -19,6 +20,7 @@ not depend on `qiskit-algorithms`.
 1. VQE for Molecular Energy — done
 2. QAOA for Portfolio Selection — done
 3. Quantum Kernel for Biomedical Classification — done
+4. QAOA Max-Cut — done (unconstrained reference problem)
 
 ## Important design decisions
 
@@ -53,18 +55,41 @@ against published numbers — the qubit operator alone gives -1.857, not -1.137.
   At 8192 shots neither reaches chemical accuracy — shot noise is the binding
   constraint, and a noisy estimate can fall *below* the exact energy without
   violating the variational principle.
-- **QAOA**: only **1.12x** better than uniform sampling over feasible portfolios
-  at the default penalty. Large penalty buys feasibility (99.3%) but flattens the
-  distribution; small penalty (0.5) reaches 1.85x lift but drops feasibility to
-  77%. The fix is a constraint-preserving XY mixer, not more tuning.
+- **QAOA portfolio**: the penalty encoding is only ~**1.05x** better than uniform
+  sampling over feasible portfolios — it learns feasibility and little else,
+  because the penalty (6.17) dwarfs the objective spread (~2.1). Lowering it to
+  0.5 doubles the lift but drops feasibility to 55%.
+- **XY mixer removes that tradeoff.** `(XX+YY)/2` commutes with total Hamming
+  weight, so feasibility becomes structural: **exactly 100%** at every depth and
+  topology, with no penalty term at all. Optimality lift reaches 20x (ring, p=6).
+  But it is **non-monotonic in depth** — ring gives 3.52% / 4.74% / 100% / 16.67%
+  at p = 3/4/6/8. That is local optima from a fixed linear-ramp warm start, not
+  evidence that p=6 is special. The complete topology is far more predictable
+  (1.47x -> 7.50x) since it mixes the whole subspace in one layer.
+- **QAOA Max-Cut**: 0.905 expected approximation ratio vs 0.600 for random
+  assignment, 49.7% of shots optimal. Greedy also ties the exact optimum
+  instantly, which is what an 8-vertex problem looks like.
 - **Quantum kernel**: loses to RBF-SVM (ROC-AUC 0.694 vs 0.826) at ~1675x the
   compute. Kernel-target alignment (0.0906 vs 0.1356) predicted this before any
   classifier was fitted — use it as a cheap go/no-go check.
 
+## Performance trap worth remembering
+
+`QAOAAnsatz` holds `PauliEvolutionGate`s whose synthesis is redone on **every**
+estimator call. Measured at 2.56s per call versus 0.006s after a one-time
+`.decompose(reps=3)` on an 8-qubit graph — a ~400x difference that turned a
+2-second optimisation into 13 minutes. `run_qaoa` decomposes up front.
+
+Similarly, Aer's `EstimatorV2` seeds only via `run_options["seed_simulator"]`;
+a plain `seed` key is accepted and ignored, leaving runs irreproducible.
+
 ## Next milestone
 
-- Notebook walkthroughs for the three tutorials.
-- XY mixer for QAOA so cardinality is preserved by construction.
+- Notebook walkthroughs for the finished tutorials.
 - A genuinely KG-derived biomedical dataset; the current features are synthetic
-  Gaussian blobs, which is exactly the geometry RBF is best at.
+  Gaussian blobs, which is exactly the geometry RBF is best at. This is the
+  biggest remaining integrity gap — tutorial 3's conclusion is currently an
+  artifact of the data generator.
+- Dicke-state warm start for the XY mixer, to replace the single k-hot basis
+  state and reduce the depth sensitivity seen above.
 - Noise models, then IBM Runtime and CUDA-Q adapters.

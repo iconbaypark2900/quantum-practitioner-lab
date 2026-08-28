@@ -31,6 +31,7 @@ QUANTUM_DEMOS: frozenset[str] = frozenset(
         "vqe_molecular_energy",
         "qaoa_portfolio_selection",
         "quantum_kernel_biomedical",
+        "qaoa_maxcut",
     }
 )
 

@@ -26,6 +26,14 @@ METRIC_FIELDS = (
     "optimal_probability_lift",
     "normalized_approximation_ratio",
     "constraint_report",
+    "mixer",
+    # Max-Cut
+    "expected_approximation_ratio",
+    "approximation_ratio",
+    "best_cut_value",
+    "max_cut_value",
+    "random_guess_ratio",
+    "beats_random_guessing",
     # Quantum kernel
     "best_model",
     "quantum_beats_all_classical",
