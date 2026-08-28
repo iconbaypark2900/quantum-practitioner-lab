@@ -66,8 +66,8 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [ ] HHL intro
 - [ ] Variational heat equation
 - [ ] Black-Scholes PDE
-- [ ] VQC classifier
-- [ ] QML link prediction
+- [x] VQC classifier
+- [x] QML link prediction (Hetionet CtD, shared by the kernel and VQC tutorials)
 
 ## Phase 4: Backend expansion
 

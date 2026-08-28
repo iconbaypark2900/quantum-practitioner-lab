@@ -34,6 +34,7 @@ QUANTUM_DEMOS: frozenset[str] = frozenset(
         "qaoa_maxcut",
         "adapt_vqe_materials",
         "trotterization",
+        "vqc_classifier",
     }
 )
 

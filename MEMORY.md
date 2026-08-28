@@ -141,6 +141,28 @@ determinants and only an XY-type generator can act on it.
 - Pool choice decides reachability: restricted to weight-1 operators every
   gradient is zero, ADAPT selects nothing and returns exactly Hartree-Fock.
 
+## VQC findings
+
+Same Hetionet data, same feature map, same 5 folds as the quantum kernel, so the
+comparison isolates the learning strategy.
+
+- Four-way tie: VQC 0.600 +- 0.121, RBF 0.580 +- 0.099, quantum kernel
+  0.555 +- 0.079, RF 0.471 +- 0.071. VQC ranks first and also has the widest
+  spread; paired vs kernel reports `difference_exceeds_noise: false`. The ranking
+  order is not stable information.
+- **Cost is not a tie**: VQC 96,000 circuit evaluations (linear, every one of 600
+  optimiser iterations) vs kernel 19,900 (quadratic, paid once). 4.8x more for an
+  indistinguishable result, and the kernel's SVM is convex so it gets its global
+  optimum by construction.
+- **Barren plateaus measured**: gradient variance 6.85e-2 / 1.66e-2 / 6.89e-3 /
+  1.51e-3 at 2/4/6/8 qubits -- roughly 4x decay per two qubits, exponential in
+  width. The quantum kernel has no trainable circuit and therefore no barren
+  plateau; that is the sharpest structural difference between the two.
+- Batching is what makes training feasible: V2 primitives take a parameter
+  *array*, so 200 samples go in one pub (337 ms) instead of 200 calls. A test
+  asserts batched == per-sample, since a broadcasting bug produces
+  plausible-looking garbage.
+
 ## Trotterization findings
 
 TFIM (4 qubits, J=h=1, t=1.5), error = spectral norm vs exact `expm`:

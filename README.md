@@ -25,9 +25,10 @@ CLI:                qprac-lab
 | QAOA for Max-Cut | **Implemented** — the unconstrained reference problem |
 | Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel`, on real Hetionet data |
 | ADAPT-VQE | **Implemented** — grows the ansatz from a gradient-ranked pool |
+| VQC classifier | **Implemented** — same data and folds as the quantum kernel |
 | Trotterization | **Implemented** — TFIM time evolution, error scaling verified |
 | Device noise models | **Implemented** — depolarizing + readout, all tutorials benchmarked |
-| PDEs, VQC | Classical scaffolds only |
+| PDEs | Classical scaffolds only |
 | IBM Runtime / CUDA-Q backends | Placeholders |
 
 `qprac-lab list` prints which is which. Nothing is labelled quantum unless it
