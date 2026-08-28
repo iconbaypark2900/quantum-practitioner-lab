@@ -33,6 +33,7 @@ QUANTUM_DEMOS: frozenset[str] = frozenset(
         "quantum_kernel_biomedical",
         "qaoa_maxcut",
         "adapt_vqe_materials",
+        "trotterization",
     }
 )
 

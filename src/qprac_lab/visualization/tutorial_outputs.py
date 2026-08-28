@@ -251,6 +251,72 @@ def plot_model_comparison(
     return output_path
 
 
+def plot_trotter_tradeoff(
+    scaling: list[dict],
+    noise_tradeoff: list[dict],
+    output_path: str = "results/trotter_tradeoff.png",
+):
+    """Trotter error scaling, and where device noise reverses it.
+
+    The left panel is the textbook result: more steps, less error, at both
+    orders. The right panel is the one that matters for hardware -- the ideal
+    curve keeps falling while the noisy curve turns around, because past some
+    depth the added noise costs more than the Trotter error it removes.
+    """
+    if not scaling:
+        return None
+    _prepare(output_path)
+    fig, (ax, ax_noise) = plt.subplots(1, 2, figsize=(11, 4.2))
+
+    for order, colour, marker in ((1, "#d62728", "s"), (2, "#1f77b4", "o")):
+        rows = [r for r in scaling if r["order"] == order]
+        if not rows:
+            continue
+        ax.loglog(
+            [r["steps"] for r in rows],
+            [max(r["error"], 1e-16) for r in rows],
+            marker=marker,
+            color=colour,
+            label=f"order {order}",
+        )
+    ax.set_xlabel("Trotter steps")
+    ax.set_ylabel(r"$\||U_{\mathrm{trotter}} - U_{\mathrm{exact}}\||_2$")
+    ax.set_title("Trotter error scaling (ideal)")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.3, which="both")
+
+    if noise_tradeoff:
+        steps = [r["steps"] for r in noise_tradeoff]
+        ax_noise.loglog(
+            steps,
+            [max(r["ideal_error"], 1e-16) for r in noise_tradeoff],
+            "o-",
+            color="#1f77b4",
+            label="Ideal simulator",
+        )
+        ax_noise.loglog(
+            steps,
+            [max(r["noisy_error"], 1e-16) for r in noise_tradeoff],
+            "s-",
+            color="#d62728",
+            label="With device noise",
+        )
+        best = min(noise_tradeoff, key=lambda r: r["noisy_error"])
+        ax_noise.axvline(
+            best["steps"], color="gray", linestyle=":", label=f"Optimum ({best['steps']} steps)"
+        )
+        ax_noise.set_xlabel("Trotter steps")
+        ax_noise.set_ylabel("Observable error")
+        ax_noise.set_title("More steps stops helping under noise")
+        ax_noise.legend(fontsize=8)
+        ax_noise.grid(alpha=0.3, which="both")
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    return output_path
+
+
 def save_constraint_report(
     report: dict,
     output_path: str = "results/portfolio_constraint_report.json",

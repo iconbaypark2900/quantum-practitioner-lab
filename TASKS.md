@@ -60,7 +60,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 
 - [x] ADAPT-VQE
 - [x] Hamiltonians and expectation values (`hamiltonian_utils`)
-- [ ] Trotterization
+- [x] Trotterization
 - [x] QAOA Max-Cut (+ notebook walkthrough)
 - [x] QUBO / Ising mapping
 - [ ] HHL intro

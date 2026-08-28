@@ -141,6 +141,30 @@ determinants and only an XY-type generator can act on it.
 - Pool choice decides reachability: restricted to weight-1 operators every
   gradient is zero, ADAPT selects nothing and returns exactly Hartree-Fock.
 
+## Trotterization findings
+
+TFIM (4 qubits, J=h=1, t=1.5), error = spectral norm vs exact `expm`:
+
+- Fitted scaling exponents **1.09** (first order) and **2.09** (second order)
+  against theory's 1 and 2; successive error ratios converge to 2.01 and 4.01.
+  Cleanest quantitative agreement in the repo.
+- **Noise reverses the trade.** Ideal error falls 3.81 -> 0.0003 across 1..32
+  steps; noisy error bottoms out at **2 steps** (0.0257) then climbs to 0.0485.
+  At 32 steps the circuit is 100x more accurate in principle and ~2x more wrong
+  in practice. The optimum is finite, small, and problem-specific.
+- The 1-step noisy result (3.660) beats its ideal counterpart (3.812) -- noise
+  pulling a badly-wrong answer toward truth. Coincidence, not mitigation.
+
+**Trap:** `Operator(circuit)` on an *undecomposed* `PauliEvolutionGate` returns
+the exact matrix exponential and ignores the synthesis -- 1.0e-15 error at every
+step count. Decomposed, the same reps=1 circuit has error 1.9. Any Trotter study
+skipping the decomposition is benchmarking SciPy. `trotter_circuit()` returns
+decomposed; a regression test pins both numbers.
+
+**Observable choice matters:** |+...+> is an eigenstate of the TFIM's spin-flip
+symmetry, so magnetisation stays pinned at zero and every step count scores an
+identical, meaningless error. Use |0...0>.
+
 ## Performance trap worth remembering
 
 `QAOAAnsatz` holds `PauliEvolutionGate`s whose synthesis is redone on **every**
