@@ -5,6 +5,7 @@ import json
 import sys
 from dataclasses import asdict, is_dataclass
 
+from qprac_lab.backends.pennylane_adapter import PennyLaneBackendAdapter
 from qprac_lab.backends.qiskit_adapter import (
     QiskitNotInstalledError,
     qiskit_available,
@@ -31,6 +32,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("list", help="list demos and their implementation level")
     subparsers.add_parser("env", help="report the installed quantum stack")
+    subparsers.add_parser(
+        "cross-check", help="verify key results against PennyLane"
+    )
     return parser
 
 
@@ -43,10 +47,29 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{entry['algorithm']:32s} [{marker}]")
         return 0
 
+    if args.command == "cross-check":
+        from qprac_lab.backends.pennylane_adapter import (
+            PennyLaneNotInstalledError,
+            cross_check_ising_mapping,
+            cross_check_vqe,
+        )
+
+        try:
+            payload = {"vqe": cross_check_vqe(), "ising_mapping": cross_check_ising_mapping()}
+        except PennyLaneNotInstalledError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+
     if args.command == "env":
         print(
             json.dumps(
-                {"qiskit_available": qiskit_available(), "versions": qiskit_versions()},
+                {
+                    "qiskit_available": qiskit_available(),
+                    "versions": qiskit_versions(),
+                    "pennylane": PennyLaneBackendAdapter().describe(),
+                },
                 indent=2,
             )
         )

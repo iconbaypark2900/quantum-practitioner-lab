@@ -27,9 +27,10 @@ CLI:                qprac-lab
 | ADAPT-VQE | **Implemented** — grows the ansatz from a gradient-ranked pool |
 | VQC classifier | **Implemented** — same data and folds as the quantum kernel |
 | Trotterization | **Implemented** — TFIM time evolution, error scaling verified |
+| PennyLane cross-check | **Implemented** — independent verification of key results |
 | Device noise models | **Implemented** — depolarizing + readout, all tutorials benchmarked |
 | PDEs | Classical scaffolds only |
-| IBM Runtime / CUDA-Q backends | Placeholders |
+| IBM Runtime / CUDA-Q backends | Dropped — see `TASKS.md` |
 
 `qprac-lab list` prints which is which. Nothing is labelled quantum unless it
 actually runs a circuit.
@@ -211,11 +212,27 @@ they read on GitHub without running anything:
 jupyter lab notebooks/
 ```
 
+## Independent verification
+
+```bash
+pip install -e ".[pennylane]"
+python scripts/run_cross_check.py
+```
+
+Every serious bug found while building this produced *plausible numbers rather
+than an error* — an ignored seed, an undecomposed gate returning the exact
+answer, an assumed kernel diagonal. A second, unrelated stack is the cheapest
+thing that catches those. VQE agrees to `4e-16` across the dissociation range;
+the QUBO→Ising mapping agrees over all 64 assignments to `1.8e-14`.
+
+Details: [`tutorials/05-benchmarking/cross_framework_verification.md`](tutorials/05-benchmarking/cross_framework_verification.md).
+
 ## CLI
 
 ```bash
 qprac-lab list                                  # demos and implementation level
 qprac-lab env                                   # installed quantum stack versions
+qprac-lab cross-check                           # verify results against PennyLane
 qprac-lab demo --algorithm vqe_molecular_energy
 ```
 

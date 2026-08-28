@@ -32,6 +32,9 @@ qiskit = [
   "qiskit-machine-learning>=0.9",
   "qiskit-optimization>=0.7"
 ]
+pennylane = [
+  "pennylane>=0.40"
+]
 nature = [
   "qiskit-nature>=0.8",
   "pyscf>=2.5"

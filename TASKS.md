@@ -73,8 +73,9 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 
 - [x] Qiskit backend adapter (statevector + Aer, V2 primitives, shot control)
 - [x] Dicke-state warm start for the XY mixer (+ optimiser restarts)
-- [ ] PennyLane backend adapter (replaces the IBM Runtime item: no credentials
+- [x] PennyLane backend adapter (replaces the IBM Runtime item: no credentials
       needed, open source, and CI can actually test it)
+- [x] Cross-framework verification of VQE and the QUBO/Ising mapping
 - [ ] ~~CUDA-Q backend adapter~~ — dropped, no GPU access on the target machine
 - [ ] ~~IBM Runtime backend adapter~~ — dropped in favour of PennyLane
 - [x] Noise model support (depolarizing + readout presets: light/moderate/heavy)

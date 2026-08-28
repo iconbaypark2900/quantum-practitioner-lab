@@ -187,6 +187,25 @@ decomposed; a regression test pins both numbers.
 symmetry, so magnetisation stays pinned at zero and every step count scores an
 identical, meaningless error. Use |0...0>.
 
+## Cross-framework verification (PennyLane)
+
+Replaces the IBM Runtime adapter: no credentials, CI-testable, and -- decisively --
+it exercises a *different* stack, where Runtime would have re-run the same Qiskit
+code and verified nothing.
+
+- VQE agrees with Qiskit to 4.4e-16 at R = 0.735/1.0/2.5 A.
+- QUBO -> Ising agrees over all 64 assignments to 1.8e-14.
+- PennyLane implementations are written **natively**, not translated -- a
+  translation carries over the convention errors it is meant to detect.
+- **Ordering trap**: Qiskit labels are little-endian (leftmost char = highest
+  qubit), PennyLane addresses wires explicitly, so char `i` maps to wire
+  `n-1-i`. A flipped mapping gives a mirror-image Hamiltonian with an *identical
+  spectrum*, so eigenvalue tests all pass. Only an asymmetric operator catches
+  it; the test suite pins one.
+- Limit: agreement rules out shared *implementation* bugs, not shared
+  *conceptual* ones. If the Hamiltonian is wrong both reproduce it faithfully --
+  hence the separate checks against published FCI values.
+
 ## Performance trap worth remembering
 
 `QAOAAnsatz` holds `PauliEvolutionGate`s whose synthesis is redone on **every**
