@@ -107,11 +107,60 @@ def k_hot_initial_state(circuit, num_ones: int) -> None:
         circuit.x(qubit)
 
 
-def build_xy_qaoa_ansatz(cost_operator, reps: int, num_ones: int, topology: str = "ring"):
+def dicke_state_vector(num_qubits: int, num_ones: int) -> np.ndarray:
+    """Amplitudes of the Dicke state ``|D^n_k>``.
+
+    The uniform superposition over *every* bitstring of Hamming weight ``k``. It
+    is the constrained analogue of ``|+>^n``: the unbiased starting point over the
+    feasible subspace, where :func:`k_hot_initial_state` picks one arbitrary
+    member of it.
+    """
+    from itertools import combinations
+
+    if not 0 <= num_ones <= num_qubits:
+        raise ValueError(f"num_ones {num_ones} outside 0..{num_qubits}")
+    amplitudes = np.zeros(2**num_qubits)
+    for chosen in combinations(range(num_qubits), num_ones):
+        amplitudes[sum(1 << qubit for qubit in chosen)] = 1.0
+    return amplitudes / np.linalg.norm(amplitudes)
+
+
+def dicke_initial_state(circuit, num_ones: int) -> None:
+    """Prepare a Dicke state by exact state preparation.
+
+    Exact and simple, but **not scalable**: generic state preparation synthesises
+    into depth that grows fast with qubit count -- measured at depth 272 for
+    ``n=6, k=3`` and 1241 for ``n=8, k=4``, which is more than the QAOA circuit it
+    is warming up. Baertschi and Eidenbenz (2019) give a dedicated ``O(kn)``
+    construction; that is the route for anything hardware-bound. Implemented this
+    way here because the *physics* is identical either way, and the question this
+    warm start exists to answer is about solution quality, not gate counts.
+    """
+    require_qiskit("Preparing a Dicke state")
+    from qiskit.circuit.library import StatePreparation
+
+    amplitudes = dicke_state_vector(circuit.num_qubits, num_ones)
+    circuit.append(StatePreparation(amplitudes), range(circuit.num_qubits))
+
+
+#: How the fixed-weight subspace is entered before the first cost layer.
+INITIAL_STATES = ("k_hot", "dicke")
+
+
+def build_xy_qaoa_ansatz(
+    cost_operator,
+    reps: int,
+    num_ones: int,
+    topology: str = "ring",
+    initial_state: str = "k_hot",
+):
     """Constraint-preserving QAOA ansatz over the fixed-Hamming-weight subspace.
 
     Parameters are ordered ``[beta_0..beta_{p-1}, gamma_0..gamma_{p-1}]``, matching
     Qiskit's own ``QAOAAnsatz`` so the same initial-point helper works for both.
+
+    ``initial_state`` selects how the feasible subspace is entered: ``k_hot`` picks
+    one arbitrary feasible bitstring, ``dicke`` starts unbiased across all of them.
     """
     require_qiskit("Building an XY-mixer QAOA ansatz")
     from qiskit import QuantumCircuit
@@ -122,7 +171,14 @@ def build_xy_qaoa_ansatz(cost_operator, reps: int, num_ones: int, topology: str 
     gammas = ParameterVector("gamma", reps)
 
     circuit = QuantumCircuit(num_qubits)
-    k_hot_initial_state(circuit, num_ones)
+    if initial_state == "dicke":
+        dicke_initial_state(circuit, num_ones)
+    elif initial_state == "k_hot":
+        k_hot_initial_state(circuit, num_ones)
+    else:
+        raise ValueError(
+            f"Unknown initial_state {initial_state!r}; expected one of {INITIAL_STATES}"
+        )
     for layer in range(reps):
         apply_diagonal_cost_layer(circuit, cost_operator, gammas[layer])
         apply_xy_mixer(circuit, betas[layer], topology=topology)

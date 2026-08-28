@@ -102,7 +102,7 @@ def test_xy_mixer_makes_every_sampled_portfolio_feasible():
     assert result.feasible_probability == 1.0
     assert result.constraint_report["constraint_violations"] == 0
     assert result.problem["penalty"] == 0.0
-    assert result.mixer == "xy:ring"
+    assert result.mixer == "xy:ring:k_hot"
 
 
 def test_xy_mixer_beats_the_penalty_encoding_on_feasibility():
@@ -157,3 +157,59 @@ def test_qaoa_maxcut_expected_value_is_consistent_with_samples(maxcut_result):
     """The reported expectation must actually be the mean over the sampled rows."""
     assert maxcut_result.expected_cut_value <= maxcut_result.best_cut_value
     assert 0.0 <= maxcut_result.optimal_probability <= 1.0
+
+
+def test_dicke_state_is_uniform_over_the_feasible_subspace():
+    """The constrained analogue of |+>^n: unbiased across every weight-k string."""
+    from math import comb
+
+    from qprac_lab.circuits.mixers import dicke_state_vector
+
+    amplitudes = dicke_state_vector(6, 3)
+    probabilities = amplitudes**2
+    support = probabilities[probabilities > 1e-12]
+    assert len(support) == comb(6, 3) == 20
+    assert np.allclose(support, 1 / 20)
+    for index, probability in enumerate(probabilities):
+        if probability > 1e-12:
+            assert bin(index).count("1") == 3
+
+    with pytest.raises(ValueError):
+        dicke_state_vector(3, 5)
+
+
+@pytest.mark.parametrize("initial_state", ["k_hot", "dicke"])
+def test_both_warm_starts_preserve_the_feasible_subspace(initial_state):
+    budget = 3
+    operator, _ = portfolio_qubo(
+        *make_small_portfolio_dataset(6), budget=budget, penalty=0.0
+    ).to_ising()
+    ansatz = build_xy_qaoa_ansatz(
+        operator, reps=3, num_ones=budget, initial_state=initial_state
+    )
+    rng = np.random.default_rng(0)
+    values = rng.uniform(-np.pi, np.pi, size=ansatz.num_parameters)
+    probabilities = Statevector(ansatz.assign_parameters(values)).probabilities_dict()
+    infeasible = sum(p for bits, p in probabilities.items() if sum(map(int, bits)) != budget)
+    assert infeasible == pytest.approx(0.0, abs=1e-12)
+
+
+def test_unknown_initial_state_is_rejected():
+    operator, _ = portfolio_qubo(*make_small_portfolio_dataset(4), budget=2).to_ising()
+    with pytest.raises(ValueError, match="initial_state"):
+        build_xy_qaoa_ansatz(operator, reps=1, num_ones=2, initial_state="nonsense")
+
+
+def test_restarts_are_recorded_and_the_best_is_kept():
+    """A single QAOA run is a draw from a wide distribution, so restarts are the
+    default and the whole spread is reported rather than just the winner."""
+    result = run_qaoa_portfolio_selection_tutorial(mixer="xy", reps=4, restarts=3, shots=1024)
+    assert result.restarts == 3
+    assert len(result.restart_objectives) == 3
+    # run_qaoa minimises, so the kept run must be the smallest objective seen.
+    assert result.qaoa_cost_expectation == pytest.approx(min(result.restart_objectives))
+
+
+def test_restarts_must_be_positive():
+    with pytest.raises(ValueError, match="restarts"):
+        run_qaoa_portfolio_selection_tutorial(mixer="xy", reps=2, restarts=0, shots=512)

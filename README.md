@@ -94,11 +94,15 @@ term, mapped to an Ising Hamiltonian, solved with `QAOAAnsatz`.
 
 - Baselines: brute force, greedy, simulated annealing
 - Result: finds the exact optimum
-- Finding: with the textbook penalty encoding, only a **1.05x lift over uniform
+- Finding: with the textbook penalty encoding, only a **~1.1x lift over uniform
   sampling of feasible portfolios** — it learns feasibility and little else.
-  Switching to an **XY mixer** (`mixer="xy"`) makes feasibility structural:
-  **exactly 100%** at every depth, and up to a 20x lift on optimality. Reported
-  by default so neither result can be oversold.
+  An **XY mixer** (`mixer="xy"`) makes feasibility structural: **exactly 100%**
+  at every depth, because `(XX+YY)/2` commutes with the number operator.
+- Caveat, measured: optimality is a **lottery**. The same `p=6` configuration
+  ranges from 0.1% to 100% probability on the optimum depending only on the
+  optimiser's opening angles (s.d. 43%). `restarts=5` is therefore the default,
+  and a Dicke warm start (`xy_initial_state="dicke"`) trades peak for
+  reliability — a third of the variance, but never the 20x peak.
 - Papers: Farhi (QAOA), Hadfield (constraint-preserving mixers)
 
 ```bash

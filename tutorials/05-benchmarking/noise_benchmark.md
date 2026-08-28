@@ -42,6 +42,13 @@ silently when they are not:
 Chemical accuracy is `1.6e-3` Ha. Random guessing scores 0.600 on Max-Cut and
 1.00x lift on the portfolio problem.
 
+The XY lift column was measured with a **single** optimiser restart, before
+restarts became the default. Treat it as one draw from a wide distribution — at
+`p = 6` that same configuration ranges from 0.1x to 20x on warm start alone (see
+[the portfolio tutorial](../02-optimization/02-qaoa-portfolio-selection.md)). The
+*feasibility* column is unaffected: it is structural, not optimiser-dependent,
+and it is the column this table exists to make a point about.
+
 ## What this says
 
 **VQE is the most fragile thing in this repository.** Even the *optimistic*

@@ -49,6 +49,8 @@ class PortfolioSelectionReport:
     problem: dict
     qaoa_reps: int
     mixer: str
+    restarts: int
+    restart_objectives: list[float]
     optimizer: str
     function_evaluations: int
     optimal_parameters: list[float]
@@ -96,7 +98,9 @@ def run_qaoa(
     mixer: str = "transverse_field",
     num_ones: int | None = None,
     xy_topology: str = "ring",
+    xy_initial_state: str = "k_hot",
     gamma_scale: float | None = None,
+    restarts: int = 1,
 ):
     """Optimise QAOA angles for a QUBO, then sample the optimised state.
 
@@ -110,7 +114,13 @@ def run_qaoa(
         Feasibility holds by construction, so ``qubo`` should carry **no**
         penalty term.
 
-    Returns ``(scipy_result, counts, history, offset)``.
+    ``restarts`` repeats the optimisation from perturbed warm starts and keeps the
+    best. This is not optional rigour: measured on this problem, the *same*
+    configuration at ``p=6`` produced anywhere from 0.1% to 100% probability on the
+    optimum depending only on the opening angles. A single restart reports a draw
+    from that distribution, not a property of the algorithm.
+
+    Returns ``(scipy_result, counts, history, offset, restart_objectives)``.
     """
     require_qiskit("Running QAOA")
 
@@ -119,7 +129,11 @@ def run_qaoa(
         if num_ones is None:
             raise ValueError("the xy mixer needs num_ones (the Hamming weight to preserve)")
         ansatz = build_xy_qaoa_ansatz(
-            cost_operator, reps=reps, num_ones=num_ones, topology=xy_topology
+            cost_operator,
+            reps=reps,
+            num_ones=num_ones,
+            topology=xy_topology,
+            initial_state=xy_initial_state,
         )
     elif mixer == "transverse_field":
         from qiskit.circuit.library import QAOAAnsatz
@@ -149,12 +163,26 @@ def run_qaoa(
         largest = max(float(np.max(np.abs(np.real(cost_operator.coeffs)))), 1e-12)
         gamma_scale = 1.0 / largest
 
-    result = minimize(
-        objective,
-        x0=qaoa_initial_point(reps, gamma_scale=gamma_scale),
-        method=optimizer,
-        options={"maxiter": maxiter},
-    )
+    if restarts < 1:
+        raise ValueError(f"restarts must be at least 1, got {restarts}")
+
+    rng = np.random.default_rng(seed)
+    best_result = None
+    restart_objectives: list[float] = []
+    for attempt in range(restarts):
+        # First restart uses the documented linear ramp; the rest perturb its
+        # scale, which is the axis the outcome proved most sensitive to.
+        multiplier = 1.0 if attempt == 0 else float(rng.uniform(0.5, 2.0))
+        candidate = minimize(
+            objective,
+            x0=qaoa_initial_point(reps, gamma_scale=gamma_scale * multiplier),
+            method=optimizer,
+            options={"maxiter": maxiter},
+        )
+        restart_objectives.append(float(candidate.fun))
+        if best_result is None or candidate.fun < best_result.fun:
+            best_result = candidate
+    result = best_result
 
     measured = ansatz.assign_parameters(result.x)
     measured.measure_all()
@@ -167,7 +195,7 @@ def run_qaoa(
         .result()[0]
         .data.meas.get_counts()
     )
-    return result, counts, history, offset
+    return result, counts, history, offset, restart_objectives
 
 
 def feasible_objective_range(expected_returns, covariance, budget: int, risk_lambda: float):
@@ -193,6 +221,7 @@ def run_qaoa_portfolio_selection_tutorial(
     reps: int = 3,
     mixer: str = "transverse_field",
     xy_topology: str = "ring",
+    xy_initial_state: str = "k_hot",
     penalty: float | None = None,
     backend: str = "statevector",
     shots: int = 4096,
@@ -200,6 +229,7 @@ def run_qaoa_portfolio_selection_tutorial(
     maxiter: int = 300,
     seed: int = 42,
     noise: str | None = None,
+    restarts: int = 5,
 ) -> PortfolioSelectionReport:
     """Run tutorial 2 end to end: QAOA portfolio selection against three baselines."""
     require_qiskit("The QAOA portfolio-selection tutorial")
@@ -219,7 +249,7 @@ def run_qaoa_portfolio_selection_tutorial(
         penalty=penalty,
     )
 
-    result, counts, history, _offset = run_qaoa(
+    result, counts, history, _offset, restart_objectives = run_qaoa(
         qubo,
         reps=reps,
         optimizer=optimizer,
@@ -231,6 +261,8 @@ def run_qaoa_portfolio_selection_tutorial(
         mixer=mixer,
         num_ones=budget if mixer == "xy" else None,
         xy_topology=xy_topology,
+        xy_initial_state=xy_initial_state,
+        restarts=restarts,
     )
 
     total_shots = sum(counts.values())
@@ -325,7 +357,11 @@ def run_qaoa_portfolio_selection_tutorial(
             "expected_returns": np.asarray(expected_returns).round(6).tolist(),
         },
         qaoa_reps=reps,
-        mixer=f"{mixer}:{xy_topology}" if mixer == "xy" else mixer,
+        restarts=restarts,
+        restart_objectives=restart_objectives,
+        mixer=(
+            f"{mixer}:{xy_topology}:{xy_initial_state}" if mixer == "xy" else mixer
+        ),
         optimizer=optimizer,
         function_evaluations=len(history),
         optimal_parameters=[float(v) for v in np.atleast_1d(result.x)],

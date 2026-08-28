@@ -89,74 +89,108 @@ covariance term entirely, so it happily picks three correlated assets.
 
 ## Benchmark
 
-`n = 6`, `budget = 3`, 4096 shots, statevector simulator. There are 20 feasible
-portfolios, so **random guessing among feasible states hits the optimum 5% of the
-time** -- that is the bar, and the `Lift` column measures against it.
+`n = 6`, `budget = 3`, 4096 shots, **5 optimiser restarts**, statevector
+simulator. There are 20 feasible portfolios, so random guessing among them hits
+the optimum 5% of the time — that is the bar the `Lift` column measures against.
 
-| Mixer | Penalty | p | Feasible | Hits optimum | Lift |
+| Mixer | Warm start | p | Feasible | Hits optimum | Lift |
 | --- | --- | --- | --- | --- | --- |
-| Transverse field | 6.17 (auto) | 3 | 94.7% | 5.27% | 1.05x |
-| Transverse field | 6.17 (auto) | 6 | 99.7% | 5.20% | 1.04x |
-| Transverse field | 0.50 | 6 | 54.8% | 9.91% | 1.98x |
-| XY ring | none | 3 | **100%** | 3.52% | 0.70x |
-| XY ring | none | 4 | **100%** | 4.74% | 0.95x |
-| XY ring | none | 6 | **100%** | **100%** | **20.0x** |
-| XY ring | none | 8 | **100%** | 16.67% | 3.33x |
-| XY complete | none | 3 | **100%** | 7.35% | 1.47x |
-| XY complete | none | 6 | **100%** | 37.52% | 7.50x |
-
-Every row found the optimum somewhere in its samples. The differences are
-entirely in how much probability mass landed there.
+| Transverse field + penalty | — | 3 | 95.5% | 5.93% | 1.19x |
+| Transverse field + penalty | — | 6 | 99.7% | 5.20% | 1.04x |
+| XY ring | k-hot | 3 | **100%** | 1.93% | 0.39x |
+| XY ring | k-hot | 4 | **100%** | 1.46% | 0.29x |
+| XY ring | k-hot | 6 | **100%** | 100% | 20.0x |
+| XY ring | k-hot | 8 | **100%** | 100% | 20.0x |
+| XY ring | Dicke | 3 | **100%** | 6.32% | 1.26x |
+| XY ring | Dicke | 4 | **100%** | 11.55% | 2.31x |
+| XY ring | Dicke | 6 | **100%** | 41.21% | 8.24x |
+| XY ring | Dicke | 8 | **100%** | 13.18% | 2.64x |
 
 ### The penalty encoding barely works
 
-At the safe automatic penalty, QAOA reaches ~1.05x. It is **doing almost nothing
-beyond learning feasibility**. The reason is a scale mismatch: feasibility is
-worth `P = 6.17`, while the entire spread of objective values across all feasible
-portfolios is about 2.1. The penalty dominates the landscape, and the optimiser
-spends its angles on the constraint.
+At the automatic penalty QAOA reaches ~1.05–1.19x. It is **doing almost nothing
+beyond learning feasibility**: feasibility is worth `P = 6.17` while the entire
+spread of objective values across feasible portfolios is about 2.1, so the
+penalty dominates the landscape.
 
-Lowering the penalty to 0.5 doubles the lift to 1.98x -- and drops feasibility to
-55%. You are trading one failure for another.
+Lowering the penalty to 0.5 roughly doubles the lift and drops feasibility to
+55%. One failure traded for another.
 
-### The XY mixer removes the tradeoff
+### The XY mixer makes feasibility structural
 
 `(X_i X_j + Y_i Y_j)/2` commutes with the total number operator, so evolution
 under it cannot change Hamming weight. Start in a 3-hot state and the
 optimisation *cannot leave* the feasible subspace. The penalty term disappears
-entirely, and every angle works on the objective.
+and every angle works on the objective.
 
-**Feasibility is exactly 100% at every depth and topology** -- not "mostly
-feasible", but a structural guarantee. The test suite asserts infeasible
-probability is exactly zero rather than merely small.
+**Feasibility is exactly 100% at every depth, topology and warm start** — not
+"mostly feasible", but a structural guarantee, asserted in tests as exact zero
+infeasible probability.
 
 > **On an ideal simulator.** That guarantee is a property of the ideal unitary,
-> and noise does not respect it: depolarizing and readout errors move amplitude
-> straight out of the fixed-weight subspace. Measured feasibility falls to 82.7%
-> (light noise), 46.2% (moderate), and 33.2% (heavy) -- and at heavy noise the
-> lift drops to 0.83x, *worse* than random feasible guessing. The XY mixer is
-> still the better construction, but on hardware you keep the feasibility filter
-> the penalty encoding needed. See
+> and noise does not respect it. Measured feasibility falls to 82.7% (light),
+> 46.2% (moderate) and 33.2% (heavy). See
 > [the noise benchmark](../05-benchmarking/noise_benchmark.md).
 
-Optimality improves too, dramatically at the best depth. But read the ring rows
-carefully:
+### Optimality is a lottery, and that is the real finding
 
-```text
-p = 3 -> 3.52%      p = 4 -> 4.74%      p = 6 -> 100%      p = 8 -> 16.67%
-```
+Look at the k-hot rows: 0.39x, 0.29x, **20.0x**, **20.0x**. That is not a depth
+trend. An earlier version of this tutorial reported the `p = 6` 20x figure as
+"real and reproducible across sampling seeds" — technically true and thoroughly
+misleading, because sampling seeds only affect shot noise. The optimiser's
+*opening angles* are what matter, and the result is wildly sensitive to them.
 
-**That is not monotonic, and `p = 6` is not special.** All rows start from the
-same fixed linear-ramp warm start, and COBYLA settles into different local optima
-from it at different depths. The 20x row is real and reproducible across sampling
-seeds, but it is a property of *this warm start on this instance*, not a
-depth you should expect to transfer. The complete-graph topology behaves far more
-predictably (1.47x -> 7.50x) because it mixes the whole feasible subspace in a
-single layer, where the ring needs several.
+Perturbing the initial `gamma` scale at `p = 6`, single restart, changing nothing
+else:
 
-The cost is circuit depth: two-qubit XY rotations instead of single-qubit X
-rotations, and `n(n-1)/2` of them per layer for the complete topology. On real
-hardware that is exactly the resource you do not have.
+| gamma multiplier | k-hot | Dicke |
+| --- | --- | --- |
+| 0.50 | 0.1% | 5.6% |
+| 0.75 | 8.4% | 5.5% |
+| 1.00 | **100%** | 35.6% |
+| 1.25 | 23.0% | 1.4% |
+| 1.50 | **100%** | 0.6% |
+| 2.00 | 7.1% | 31.8% |
+| **mean ± s.d.** | **39.8% ± 43.1%** | **13.4% ± 14.5%** |
+
+The same configuration ranges from 0.1% — *twenty times worse than random
+guessing* — to 100%. A single QAOA run on this problem reports a draw from that
+distribution, not a property of the algorithm.
+
+So `restarts=5` is now the default, and `restart_objectives` returns the whole
+spread rather than just the winner.
+
+### What the Dicke warm start actually buys
+
+A Dicke state `|D^n_k>` is the uniform superposition over *all* weight-k
+bitstrings — the constrained analogue of `|+>^n`, where the k-hot state picks one
+arbitrary member of the feasible subspace.
+
+It does **not** simply beat the k-hot start. It trades peak for reliability:
+
+- **Better at low depth**, where k-hot is worse than random guessing (`p = 3`:
+  1.26x vs 0.39x; `p = 4`: 2.31x vs 0.29x).
+- **Lower peak**, never reaching k-hot's 20x.
+- **Roughly a third of the variance** under warm-start perturbation (s.d. 14.5%
+  vs 43.1%).
+
+Its cost is depth: naive state preparation is depth 272 for `n = 6, k = 3` and
+1241 for `n = 8, k = 4` — more than the QAOA circuit it warms up. Bärtschi and
+Eidenbenz (2019) give a dedicated `O(kn)` construction, which is the route for
+anything hardware-bound; this project uses exact preparation because the physics
+is identical and the question here was about solution quality.
+
+### A mismatch worth knowing about
+
+Restarts keep the run with the best `<C>`, because that is what you can measure
+without knowing the answer. But `<C>` is the *expected* cost, and a distribution
+spread over several good portfolios can score better on it than one peaked on the
+single best. So selecting by `<C>` does not reliably maximise `P(optimum)` — visible
+in the k-hot `p = 3, 4` rows, which restarts made *worse*.
+
+**QAOA optimises the objective you can measure, not the one you want.** For
+Max-Cut those coincide (expected cut ratio *is* `<C>`), and restarts improve it
+from 0.886 to 0.935. For "probability of the single best portfolio", they do not.
 
 ## Visualization
 

@@ -55,17 +55,29 @@ against published numbers — the qubit operator alone gives -1.857, not -1.137.
   At 8192 shots neither reaches chemical accuracy — shot noise is the binding
   constraint, and a noisy estimate can fall *below* the exact energy without
   violating the variational principle.
-- **QAOA portfolio**: the penalty encoding is only ~**1.05x** better than uniform
+- **QAOA portfolio**: the penalty encoding is only ~**1.1x** better than uniform
   sampling over feasible portfolios — it learns feasibility and little else,
   because the penalty (6.17) dwarfs the objective spread (~2.1). Lowering it to
   0.5 doubles the lift but drops feasibility to 55%.
 - **XY mixer removes that tradeoff.** `(XX+YY)/2` commutes with total Hamming
   weight, so feasibility becomes structural: **exactly 100%** at every depth and
-  topology, with no penalty term at all. Optimality lift reaches 20x (ring, p=6).
-  But it is **non-monotonic in depth** — ring gives 3.52% / 4.74% / 100% / 16.67%
-  at p = 3/4/6/8. That is local optima from a fixed linear-ramp warm start, not
-  evidence that p=6 is special. The complete topology is far more predictable
-  (1.47x -> 7.50x) since it mixes the whole subspace in one layer.
+  topology, with no penalty term at all.
+- **The 20x optimality lift is NOT robust -- corrected.** It was once documented as
+  "reproducible across sampling seeds", which is true and misleading: sampling
+  seeds only affect shot noise. Perturbing the optimiser's opening gamma at p=6
+  gives 0.1% / 8.4% / 100% / 23% / 100% / 7.1% -- mean 39.8%, s.d. 43.1%, i.e.
+  anywhere from 20x *worse* than random to perfect. `restarts=5` is now the
+  default for both QAOA tutorials and `restart_objectives` reports the spread.
+- **Dicke warm start** (`xy_initial_state="dicke"`) trades peak for reliability:
+  better at low depth (p=3: 1.26x vs 0.39x; p=4: 2.31x vs 0.29x), lower peak
+  (8.24x vs 20x at p=6), about a third the variance (s.d. 14.5% vs 43.1%). Cost is
+  depth -- naive state prep is 272 (n=6,k=3) / 1241 (n=8,k=4), more than the QAOA
+  circuit it warms. Baertschi-Eidenbenz O(kn) is the scalable route, not implemented.
+- **<C> is not the metric you want.** Restarts keep the best expected cost, which
+  is all you can measure without knowing the answer -- but a distribution spread
+  over several good portfolios beats one peaked on the best. So restarts made
+  P(optimum) *worse* at p=3,4 while improving Max-Cut's expected ratio
+  (0.886 -> 0.935), where the metric and the objective coincide.
 - **QAOA Max-Cut**: 0.905 expected approximation ratio vs 0.600 for random
   assignment, 49.7% of shots optimal. Greedy also ties the exact optimum
   instantly, which is what an 8-vertex problem looks like.

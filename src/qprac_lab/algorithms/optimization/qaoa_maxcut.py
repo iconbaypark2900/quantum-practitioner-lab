@@ -45,6 +45,8 @@ class MaxCutReport:
     backend: dict
     graph: dict
     qaoa_reps: int
+    restarts: int
+    restart_objectives: list[float]
     optimizer: str
     function_evaluations: int
     optimal_parameters: list[float]
@@ -81,13 +83,14 @@ def run_qaoa_maxcut_tutorial(
     maxiter: int = 300,
     seed: int = 42,
     noise: str | None = None,
+    restarts: int = 5,
 ) -> MaxCutReport:
     """Run QAOA on a random regular graph and score it against the exact optimum."""
     require_qiskit("The QAOA Max-Cut tutorial")
     edges = make_maxcut_graph(num_nodes=num_nodes, degree=degree, seed=seed)
     qubo = maxcut_qubo(num_nodes, edges)
 
-    result, counts, history, _offset = run_qaoa(
+    result, counts, history, _offset, restart_objectives = run_qaoa(
         qubo,
         reps=reps,
         optimizer=optimizer,
@@ -96,6 +99,7 @@ def run_qaoa_maxcut_tutorial(
         shots=shots,
         seed=seed,
         noise=noise,
+        restarts=restarts,
     )
 
     exact = brute_force_maxcut(num_nodes, edges)
@@ -139,6 +143,8 @@ def run_qaoa_maxcut_tutorial(
             "edges": edges,
         },
         qaoa_reps=reps,
+        restarts=restarts,
+        restart_objectives=restart_objectives,
         optimizer=optimizer,
         function_evaluations=len(history),
         optimal_parameters=[float(v) for v in np.atleast_1d(result.x)],
