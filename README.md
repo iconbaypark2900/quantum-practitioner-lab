@@ -24,8 +24,9 @@ CLI:                qprac-lab
 | QAOA for portfolio selection | **Implemented** — QUBO → Ising → `QAOAAnsatz` → sampling, with a constraint-preserving XY mixer |
 | QAOA for Max-Cut | **Implemented** — the unconstrained reference problem |
 | Quantum kernel classification | **Implemented** — `zz_feature_map` + `FidelityQuantumKernel`, on real Hetionet data |
+| ADAPT-VQE | **Implemented** — grows the ansatz from a gradient-ranked pool |
 | Device noise models | **Implemented** — depolarizing + readout, all tutorials benchmarked |
-| PDEs, ADAPT-VQE, Trotter, VQC | Classical scaffolds only |
+| PDEs, Trotter, VQC | Classical scaffolds only |
 | IBM Runtime / CUDA-Q backends | Placeholders |
 
 `qprac-lab list` prints which is which. Nothing is labelled quantum unless it

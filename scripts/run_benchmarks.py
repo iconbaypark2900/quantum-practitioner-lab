@@ -19,6 +19,7 @@ from qprac_lab.algorithms.pdes.variational_heat_equation import (
 from qprac_lab.algorithms.qml.quantum_kernel_biomedical import (
     run_quantum_kernel_biomedical_tutorial,
 )
+from qprac_lab.algorithms.simulation.adapt_vqe_materials import run_adapt_vqe_materials
 from qprac_lab.algorithms.simulation.vqe_molecular_energy import run_vqe_molecular_energy_tutorial
 from qprac_lab.backends.qiskit_adapter import qiskit_available
 from qprac_lab.benchmarks.runner import run_and_time, save_benchmark_results
@@ -26,6 +27,7 @@ from qprac_lab.benchmarks.runner import run_and_time, save_benchmark_results
 #: Tutorials backed by real quantum implementations; these need the qiskit extra.
 QUANTUM_JOBS = [
     ("vqe_molecular_energy", run_vqe_molecular_energy_tutorial),
+    ("adapt_vqe_materials", run_adapt_vqe_materials),
     ("qaoa_portfolio_selection", run_qaoa_portfolio_selection_tutorial),
     ("qaoa_maxcut", run_qaoa_maxcut_tutorial),
     ("quantum_kernel_biomedical", run_quantum_kernel_biomedical_tutorial),

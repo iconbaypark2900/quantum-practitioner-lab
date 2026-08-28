@@ -110,6 +110,25 @@ against published numbers — the qubit operator alone gives -1.857, not -1.137.
   (true value 0.734 at moderate noise), and `enforce_psd=True` silently repairs a
   genuinely non-PSD matrix (min eigenvalue about -0.03).
 
+## ADAPT-VQE findings
+
+Given only the Hamiltonian and a generic 6-operator Pauli pool, ADAPT selects
+exactly `XY` -- the same generator a human derives from chemistry for H2 -- and
+stops after one operator (remaining gradients 3e-5). Its gradient is 0.180931,
+exactly the `XX` coefficient, because `XX` is the only term that mixes
+determinants and only an XY-type generator can act on it.
+
+- 1 parameter vs 12 for `efficient_su2`; 35 total expectation values (23 optimiser
+  + 12 pool scans) vs 268.
+- **At R = 2.5 A the fixed ansatz fails**: `efficient_su2` exhausts 300
+  evaluations at 2.5e-03 Ha (outside chemical accuracy) while ADAPT reaches
+  2.8e-11 with one parameter. Strong correlation is where adaptivity pays.
+- **No depth win at this size**: ADAPT depth 10 vs `efficient_su2` depth 8. Fewer
+  parameters did not buy a shorter circuit on 2 qubits; the win here is optimiser
+  cost and reliability, not depth. Do not claim depth on H2.
+- Pool choice decides reachability: restricted to weight-1 operators every
+  gradient is zero, ADAPT selects nothing and returns exactly Hartree-Fock.
+
 ## Performance trap worth remembering
 
 `QAOAAnsatz` holds `PauliEvolutionGate`s whose synthesis is redone on **every**

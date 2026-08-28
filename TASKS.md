@@ -26,7 +26,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Add real Estimator loop (one-parameter UCC and hardware-efficient ansaetze)
 - [x] Add dissociation curve showing where Hartree-Fock fails
 - [x] Add notebook walkthrough
-- [ ] Add ADAPT-VQE ansatz construction
+- [x] Add ADAPT-VQE ansatz construction
 
 ### QAOA for Portfolio Selection
 
@@ -58,7 +58,7 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 
 ## Phase 3: Implement secondary tutorials
 
-- [ ] ADAPT-VQE
+- [x] ADAPT-VQE
 - [x] Hamiltonians and expectation values (`hamiltonian_utils`)
 - [ ] Trotterization
 - [x] QAOA Max-Cut (+ notebook walkthrough)
