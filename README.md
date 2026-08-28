@@ -29,7 +29,7 @@ CLI:                qprac-lab
 | Trotterization | **Implemented** — TFIM time evolution, error scaling verified |
 | PennyLane cross-check | **Implemented** — independent verification of key results |
 | Device noise models | **Implemented** — depolarizing + readout, all tutorials benchmarked |
-| PDEs | Classical scaffolds only |
+| PDEs (HHL, heat equation, Black-Scholes) | **Implemented** — with the cost caveats measured |
 | IBM Runtime / CUDA-Q backends | Dropped — see `TASKS.md` |
 
 `qprac-lab list` prints which is which. Nothing is labelled quantum unless it

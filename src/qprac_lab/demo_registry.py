@@ -35,6 +35,9 @@ QUANTUM_DEMOS: frozenset[str] = frozenset(
         "adapt_vqe_materials",
         "trotterization",
         "vqc_classifier",
+        "hhl_intro",
+        "variational_heat_equation",
+        "black_scholes_pde",
     }
 )
 

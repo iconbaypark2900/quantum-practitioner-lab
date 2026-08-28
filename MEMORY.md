@@ -187,6 +187,35 @@ decomposed; a regression test pins both numbers.
 symmetry, so magnetisation stays pinned at zero and every step count scores an
 identical, meaningless error. Use |0...0>.
 
+## PDE findings
+
+**HHL** (2x2, eigenvalues 1 and 2, kappa=2, 2 clock qubits): fidelity exactly
+1.000000000000 vs the classical solve, P(ancilla=1) = 0.625, depth 86.
+
+- Eigenvalues must land on integer clock values. Varying only `t`: fidelity
+  1.000 / 0.631 / 0.481 / 0.444. In practice you do not know the spectrum in
+  advance -- that is what you are computing -- and a real incommensurate spectrum
+  has no exact `t` at all.
+- kappa penalty is visible: kappa 2/4/8 -> fidelity 1.000/0.984/0.558,
+  P(success) 0.625/0.421/0.098.
+- Readout is the killer: O(N/eps^2) shots. 20,000 shots to read a **2-element**
+  solution to 1%. Reading the vector throws away the exponential speedup, so HHL
+  is only useful for summary statistics like <x|M|x>.
+
+**Variational heat equation** (VQLS): fidelity 0.999999999, depth **10** vs HHL's
+86, no postselection -- but non-convex, so restarts are the default.
+
+- **The normalisation caveat is physics, not bookkeeping.** ||u|| goes 1.870829
+  -> 1.837448 in one step; that 0.0334 *is* the heat leaving the system, and a
+  normalised |psi> cannot carry it. Recovered from the state: exactly 0.0. Any
+  quantum PDE solver tracks the scale classically on the side.
+
+**Black-Scholes**: FD matches the closed form to <1% (10.3886 vs 10.4506 at the
+money). The number worth keeping: a variational solve would cost ~**2,000,000
+circuit evaluations** against **one** call to a formula. Where quantum finance
+actually argues advantage is amplitude estimation for path-dependent Monte Carlo
+-- quadratic, not exponential, and a different algorithm.
+
 ## Cross-framework verification (PennyLane)
 
 Replaces the IBM Runtime adapter: no credentials, CI-testable, and -- decisively --

@@ -63,20 +63,23 @@ All three now run real quantum circuits through Qiskit 2.x V2 primitives.
 - [x] Trotterization
 - [x] QAOA Max-Cut (+ notebook walkthrough)
 - [x] QUBO / Ising mapping
-- [ ] HHL intro
-- [ ] Variational heat equation
-- [ ] Black-Scholes PDE
+- [x] HHL intro
+- [x] Variational heat equation
+- [x] Black-Scholes PDE
 - [x] VQC classifier
 - [x] QML link prediction (Hetionet CtD, shared by the kernel and VQC tutorials)
 
 ## Phase 4: Backend expansion
+
+All items resolved -- two implemented, two deliberately dropped with reasons.
 
 - [x] Qiskit backend adapter (statevector + Aer, V2 primitives, shot control)
 - [x] Dicke-state warm start for the XY mixer (+ optimiser restarts)
 - [x] PennyLane backend adapter (replaces the IBM Runtime item: no credentials
       needed, open source, and CI can actually test it)
 - [x] Cross-framework verification of VQE and the QUBO/Ising mapping
-- [ ] ~~CUDA-Q backend adapter~~ — dropped, no GPU access on the target machine
-- [ ] ~~IBM Runtime backend adapter~~ — dropped in favour of PennyLane
+- [x] ~~CUDA-Q backend adapter~~ — dropped: no GPU access on the target machine
+- [x] ~~IBM Runtime backend adapter~~ — dropped: needs credentials, cannot be
+      CI-tested, and drives the same Qiskit stack. Replaced by PennyLane.
 - [x] Noise model support (depolarizing + readout presets: light/moderate/heavy)
 - [x] Benchmark all tutorials against ideal/noisy simulation (`scripts/run_noise_sweep.py`)
