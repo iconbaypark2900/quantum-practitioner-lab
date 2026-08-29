@@ -311,8 +311,3 @@ def run_hhl_intro_tutorial(
             "reference": "Aaronson, 'Read the fine print' (2015)",
         },
     )
-
-
-def run_hhl_intro_scaffold():
-    """Backwards-compatible alias for :func:`run_hhl_intro_tutorial`."""
-    return run_hhl_intro_tutorial()

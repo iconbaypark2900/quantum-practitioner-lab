@@ -1,67 +1,64 @@
+# Implementation status per algorithm. Cross-checked against
+# qprac_lab.demo_registry by tests/test_configs.py: anything marked `quantum`
+# here must be in QUANTUM_DEMOS, and vice versa.
 simulation:
   vqe_molecular_energy:
-    priority: 1
+    status: quantum
     algorithm_type: hybrid_variational_eigensolver
     use_case: materials_discovery_refinement
-    baseline:
-      - exact_diagonalization
-      - hartree_fock
-    outputs:
-      - energy_convergence_plot
-      - energy_error
-      - baseline_comparison
+    baseline: [exact_diagonalization, hartree_fock]
   adapt_vqe_materials:
-    priority: 2
+    status: quantum
     algorithm_type: adaptive_variational_eigensolver
+    use_case: materials_discovery_refinement
+    baseline: [exact_diagonalization, hartree_fock, fixed_ansatz_vqe]
   trotterization:
-    priority: 3
-    algorithm_type: hamiltonian_time_evolution
+    status: quantum
+    algorithm_type: product_formula_hamiltonian_simulation
+    use_case: quantum_many_body_dynamics
+    baseline: [exact_matrix_exponential]
 
 optimization:
   qaoa_portfolio_selection:
-    priority: 1
+    status: quantum
     algorithm_type: hybrid_combinatorial_optimization
-    baseline:
-      - brute_force
-      - greedy
-      - simulated_annealing
-    outputs:
-      - selected_assets
-      - objective_value
-      - constraint_report
+    use_case: quantum_hybrid_portfolio_optimizer
+    baseline: [brute_force, greedy, simulated_annealing, uniform_feasible_sampling]
   qaoa_maxcut:
-    priority: 2
+    status: quantum
     algorithm_type: hybrid_combinatorial_optimization
-  qubo_ising_mapping:
-    priority: 2
-    algorithm_type: problem_transformation
+    use_case: graph_partitioning_and_network_clustering
+    baseline: [brute_force, greedy, random_assignment]
+  logistics_routing_qubo:
+    status: scaffold
+    algorithm_type: constrained_routing_qubo
+    note: Not implemented; the QUBO builder and QAOA loop are both reusable.
 
 pdes:
   hhl_intro:
-    priority: 3
-    algorithm_type: quantum_linear_systems
+    status: quantum
+    algorithm_type: quantum_linear_systems_algorithm
+    use_case: quantum_linear_systems_for_pdes
+    baseline: [numpy_linalg_solve]
   variational_heat_equation:
-    priority: 3
-    algorithm_type: variational_quantum_pde_solver
+    status: quantum
+    algorithm_type: variational_pde_residual_minimization
+    use_case: thermal_diffusion_simulation
+    baseline: [implicit_euler_direct_solve]
   black_scholes_pde:
-    priority: 3
-    algorithm_type: quantum_financial_pde_demo
+    status: quantum
+    algorithm_type: variational_pde_residual_minimization
+    use_case: financial_derivatives_pricing
+    baseline: [black_scholes_closed_form, implicit_finite_difference]
 
 qml:
   quantum_kernel_biomedical:
-    priority: 1
+    status: quantum
     algorithm_type: kernel_method_qsvc
-    baseline:
-      - rbf_svm
-      - random_forest
-      - xgboost
-    outputs:
-      - roc_auc
-      - f1
-      - kernel_matrix_visualization
-  qsvc_classifier:
-    priority: 2
-    algorithm_type: quantum_support_vector_classifier
+    use_case: biomedical_kg_link_prediction
+    baseline: [rbf_svm, random_forest, xgboost]
   vqc_classifier:
-    priority: 2
+    status: quantum
     algorithm_type: variational_quantum_classifier
+    use_case: biomedical_kg_link_prediction
+    baseline: [quantum_kernel_svm, rbf_svm, random_forest]

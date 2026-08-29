@@ -12,9 +12,9 @@ from qprac_lab.algorithms.optimization.qaoa_maxcut import run_qaoa_maxcut_tutori
 from qprac_lab.algorithms.optimization.qaoa_portfolio_selection import (
     run_qaoa_portfolio_selection_tutorial,
 )
-from qprac_lab.algorithms.pdes.hhl_intro import run_hhl_intro_scaffold
+from qprac_lab.algorithms.pdes.hhl_intro import run_hhl_intro_tutorial
 from qprac_lab.algorithms.pdes.variational_heat_equation import (
-    run_variational_heat_equation_scaffold,
+    run_variational_heat_equation_tutorial,
 )
 from qprac_lab.algorithms.qml.quantum_kernel_biomedical import (
     run_quantum_kernel_biomedical_tutorial,
@@ -30,8 +30,8 @@ QUANTUM_JOBS = [
     ("vqe_molecular_energy", run_vqe_molecular_energy_tutorial),
     ("adapt_vqe_materials", run_adapt_vqe_materials),
     ("trotterization", run_trotterization_tutorial),
-    ("hhl_intro", run_hhl_intro_scaffold),
-    ("variational_heat_equation", run_variational_heat_equation_scaffold),
+    ("hhl_intro", run_hhl_intro_tutorial),
+    ("variational_heat_equation", run_variational_heat_equation_tutorial),
     ("qaoa_portfolio_selection", run_qaoa_portfolio_selection_tutorial),
     ("qaoa_maxcut", run_qaoa_maxcut_tutorial),
     ("quantum_kernel_biomedical", run_quantum_kernel_biomedical_tutorial),

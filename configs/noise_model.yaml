@@ -1,6 +1,25 @@
+# Device noise presets. Values are mirrored from
+# qprac_lab.backends.noise.NOISE_PRESETS and checked against it by tests.
 noise_model:
-  enabled: false
-  profile: basic_depolarizing
-  depolarizing_probability_1q: 0.001
-  depolarizing_probability_2q: 0.01
-  readout_error_probability: 0.02
+  enabled: true
+  implementation: depolarizing gate errors plus readout error
+  excluded: >-
+    Amplitude damping and crosstalk need gate-duration and topology modelling
+    that would obscure the variable these tutorials isolate.
+
+presets:
+  light:
+    single_qubit_error: 0.0001
+    two_qubit_error: 0.001
+    readout_error: 0.005
+    description: optimistic near-term hardware, better than most devices today
+  moderate:
+    single_qubit_error: 0.0003
+    two_qubit_error: 0.006
+    readout_error: 0.015
+    description: roughly a present-day IBM superconducting device
+  heavy:
+    single_qubit_error: 0.001
+    two_qubit_error: 0.02
+    readout_error: 0.04
+    description: a poorly calibrated device, or deep circuits on a mediocre one

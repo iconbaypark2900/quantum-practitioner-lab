@@ -1,20 +1,27 @@
+# Backends the project can actually run. Validated against
+# qprac_lab.backends by tests/test_configs.py, so this cannot drift again.
 backends:
-  local_scaffold:
-    type: scaffold
+  statevector:
+    type: simulator
     enabled: true
-  qiskit_aer:
+    package: qiskit
+    notes: Exact expectation values; the default for every tutorial.
+  aer:
     type: simulator
     enabled: true
     package: qiskit-aer
-  qiskit_aer_noisy:
-    type: noisy_simulator
-    enabled: false
-    package: qiskit-aer
+    notes: Shot sampling and device noise models.
+  pennylane:
+    type: cross_check
+    enabled: true
+    package: pennylane
+    notes: Independent re-implementation used to verify Qiskit results.
+
+# Deliberately not implemented. Recorded so the reasons survive.
+dropped:
   ibm_runtime:
-    type: qpu_or_managed_runtime
-    enabled: false
-    package: qiskit-ibm-runtime
+    reason: >-
+      Needs credentials, cannot be exercised in CI, and drives the same Qiskit
+      stack, so it would verify nothing. Replaced by the PennyLane cross-check.
   cudaq:
-    type: hybrid_quantum_runtime
-    enabled: false
-    package: cudaq
+    reason: No GPU access on the target machine.

@@ -1,6 +1,0 @@
-cudaq:
-  enabled: false
-  target: qpp-cpu
-  notes:
-    - Use CPU target first.
-    - Add GPU target once local CUDA-Q environment is configured.

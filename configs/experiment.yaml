@@ -1,10 +1,19 @@
 experiment:
-  name: first_three_tutorials
+  name: all_implemented_tutorials
   seed: 42
   save_artifacts: true
   output_dir: results
 
+# Every algorithm with a real quantum implementation. Checked against
+# qprac_lab.demo_registry.QUANTUM_DEMOS by tests/test_configs.py.
 runs:
   - algorithm: vqe_molecular_energy
+  - algorithm: adapt_vqe_materials
+  - algorithm: trotterization
   - algorithm: qaoa_portfolio_selection
+  - algorithm: qaoa_maxcut
   - algorithm: quantum_kernel_biomedical
+  - algorithm: vqc_classifier
+  - algorithm: hhl_intro
+  - algorithm: variational_heat_equation
+  - algorithm: black_scholes_pde

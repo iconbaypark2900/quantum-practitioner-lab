@@ -335,8 +335,3 @@ def noise_tradeoff(
             }
         )
     return rows
-
-
-def run_trotterization_scaffold():
-    """Backwards-compatible alias for :func:`run_trotterization_tutorial`."""
-    return run_trotterization_tutorial()

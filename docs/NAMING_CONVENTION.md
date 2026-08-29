@@ -7,7 +7,7 @@ Project/docs title: Quantum Practitioner Lab
 Repo/folder:        quantum-practitioner-lab
 Python package:     qprac_lab
 CLI:                qprac-lab
-Release artifact:   quantum-practitioner-lab-v0.3.0-scaffold.zip
+Release artifact:   quantum-practitioner-lab-v0.3.0.zip
 ```
 
 ## Versioned artifacts
@@ -74,17 +74,20 @@ Use snake_case for machine-readable IDs:
 
 ```text
 vqe_molecular_energy
+adapt_vqe_materials
+trotterization
 qaoa_portfolio_selection
+qaoa_maxcut
 quantum_kernel_biomedical
-hhl_linear_systems_intro
+vqc_classifier
+hhl_intro
 variational_heat_equation
 black_scholes_pde
-adapt_vqe_materials
-qaoa_maxcut
-qubo_ising_mapping
-qsvc_classifier
-vqc_classifier
+logistics_routing_qubo        # still a scaffold
 ```
+
+These are the keys of `qprac_lab.demo_registry.DEMOS`; `qprac-lab list` prints
+them with their implementation level.
 
 ## Config files
 
@@ -94,7 +97,12 @@ algorithms.yaml
 tutorials.yaml
 benchmarks.yaml
 backends.yaml
+experiment.yaml
+noise_model.yaml
 qiskit.yaml
-cudaq.yaml
 papers.yaml
 ```
+
+Loaded by `qprac_lab.config` and cross-checked against the code by
+`tests/test_configs.py`, which also fails if a new YAML is added without being
+registered.

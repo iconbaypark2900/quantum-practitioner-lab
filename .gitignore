@@ -12,5 +12,12 @@ data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
+# Same rules at any depth. The patterns above are anchored to the repo root by
+# their slash, so a stray notebooks/data/raw/ slipped past them once.
+**/data/raw/*
+**/data/processed/*
+!**/data/raw/.gitkeep
+!**/data/processed/.gitkeep
+
 # Python packaging metadata
 *.egg-info/

@@ -91,11 +91,20 @@ class LinkPredictionDataset:
 
 
 def default_cache_dir() -> Path:
-    """Where downloaded source data is cached (``data/raw`` under the cwd)."""
+    """Where downloaded source data is cached: ``data/raw`` under the project root.
+
+    Resolved against the repository rather than the working directory. It was
+    cwd-relative once, which meant running a notebook -- whose cwd is
+    ``notebooks/`` -- downloaded a 12 MB archive into ``notebooks/data/raw`` and
+    committed it, because the root-anchored ``data/raw/*`` ignore rule does not
+    match a nested path.
+    """
     import os
 
+    from qprac_lab.config import PROJECT_ROOT
+
     override = os.environ.get("QPRAC_DATA_DIR")
-    return Path(override) if override else Path("data") / "raw"
+    return Path(override) if override else PROJECT_ROOT / "data" / "raw"
 
 
 def hetionet_path(cache_dir: Path | str | None = None) -> Path:

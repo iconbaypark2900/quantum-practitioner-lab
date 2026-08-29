@@ -1,0 +1,293 @@
+"""Cross-check the YAML configs against the code and the filesystem.
+
+These files drifted for the entire scaffold phase precisely because nothing read
+them: a config nobody loads is a claim with no one to contradict it. By the time
+anyone looked, ``backends.yaml`` advertised two dropped backends and
+``tutorials.yaml`` pointed at a notebook that had been renumbered away.
+
+Editing them once would only reset that clock. These tests are the actual fix.
+They need no quantum stack.
+"""
+
+
+import sys
+
+import pytest
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover - only the 3.10 CI leg takes this path
+    # tomllib is stdlib from 3.11; this package supports 3.10, so the tests
+    # must too. Missing this broke the 3.10 CI job while 3.13 passed.
+    import tomli as tomllib
+
+from qprac_lab.config import (
+    CONFIG_NAMES,
+    PROJECT_ROOT,
+    algorithm_entries,
+    benchmark_entries,
+    concept_entries,
+    config_path,
+    dropped_backends,
+    implemented_algorithms,
+    load_config,
+    resolve,
+    tutorial_entries,
+)
+from qprac_lab.demo_registry import DEMOS, QUANTUM_DEMOS
+
+
+@pytest.mark.parametrize("name", CONFIG_NAMES)
+def test_every_config_exists_and_parses(name):
+    assert config_path(name).exists()
+    assert isinstance(load_config(name), dict)
+
+
+def test_unknown_config_is_rejected():
+    with pytest.raises(ValueError):
+        config_path("not_a_config")
+
+
+def test_no_config_file_is_orphaned():
+    """A new YAML must be registered in CONFIG_NAMES, or it drifts unwatched."""
+    on_disk = {path.stem for path in (PROJECT_ROOT / "configs").glob("*.yaml")}
+    assert on_disk == set(CONFIG_NAMES)
+
+
+# ------------------------------------------------------------------ paths
+
+
+def test_every_tutorial_path_resolves():
+    """The check that would have caught the renumbered HHL notebook."""
+    for entry in tutorial_entries():
+        assert resolve(entry["path"]).exists(), f"{entry['id']}: missing {entry['path']}"
+        if entry.get("notebook"):
+            assert resolve(entry["notebook"]).exists(), (
+                f"{entry['id']}: missing notebook {entry['notebook']}"
+            )
+
+
+def test_referenced_notebooks_have_real_content():
+    """Existence is not enough, and this file learned that the hard way.
+
+    The first version of this suite checked only that a referenced notebook
+    *existed*. Two of the six were 160-character stubs at the time, so the config
+    advertised coverage that was not there and the tests agreed with it. A path
+    check validates the filename; this validates the claim.
+    """
+    import json
+
+    for entry in tutorial_entries():
+        if not entry.get("notebook"):
+            continue
+        notebook = json.loads(resolve(entry["notebook"]).read_text(encoding="utf-8"))
+        code_cells = [c for c in notebook["cells"] if c["cell_type"] == "code"]
+        characters = sum(
+            len("".join(c.get("source", [])).strip()) for c in notebook["cells"]
+        )
+        assert code_cells, f"{entry['id']}: notebook has no code cells"
+        assert characters > 1000, (
+            f"{entry['id']}: notebook is {characters} characters -- a stub, not a walkthrough"
+        )
+        assert any(c.get("outputs") for c in code_cells), (
+            f"{entry['id']}: notebook has no stored output; re-run "
+            "`jupyter nbconvert --to notebook --execute --inplace`"
+        )
+
+
+def test_a_tutorial_without_a_notebook_says_so_explicitly():
+    """`notebook: null` is a claim of absence; a missing key is an oversight."""
+    for entry in tutorial_entries():
+        assert "notebook" in entry, f"{entry['id']}: notebook key omitted rather than set to null"
+
+
+def test_every_concept_note_resolves_and_points_somewhere():
+    """A signpost that does not point anywhere is just a thinner duplicate."""
+    for entry in concept_entries():
+        path = resolve(entry["path"])
+        assert path.exists(), f"{entry['id']}: missing {entry['path']}"
+        text = path.read_text(encoding="utf-8")
+        assert "Short note, not a standalone tutorial" in text, f"{entry['id']}: no signpost"
+        assert "## Where this is used" in text, f"{entry['id']}: no onward links"
+
+
+def test_every_benchmark_doc_resolves():
+    for entry in benchmark_entries():
+        assert resolve(entry["path"]).exists(), f"{entry['id']}: missing {entry['path']}"
+
+
+def test_declared_paths_exist():
+    for key, relative in load_config("project")["paths"].items():
+        assert resolve(relative).exists(), f"project.paths.{key} -> missing {relative}"
+
+
+def test_every_tutorial_markdown_is_registered():
+    """A tutorial nobody lists is a tutorial nobody finds."""
+    registered = {entry["path"] for entry in tutorial_entries()}
+    registered |= {entry["path"] for entry in benchmark_entries()}
+    registered |= {entry["path"] for entry in concept_entries()}
+    on_disk = {
+        str(path.relative_to(PROJECT_ROOT))
+        for path in (PROJECT_ROOT / "tutorials").rglob("*.md")
+        if path.name not in {"README.md", "papers.md"} and "use_cases" not in path.parts
+    }
+    assert on_disk <= registered, f"unregistered tutorials: {sorted(on_disk - registered)}"
+
+
+# ------------------------------------------------------- code cross-checks
+
+
+def test_algorithms_config_matches_the_demo_registry():
+    """`status: quantum` in YAML must mean `in QUANTUM_DEMOS` in code."""
+    assert implemented_algorithms() == set(QUANTUM_DEMOS)
+
+
+def test_every_configured_algorithm_is_runnable():
+    for name in algorithm_entries():
+        assert name in DEMOS, f"{name} is configured but not registered in DEMOS"
+
+
+def test_every_registered_demo_is_configured():
+    for name in DEMOS:
+        assert name in algorithm_entries(), f"{name} is registered but not in algorithms.yaml"
+
+
+def test_experiment_runs_are_the_implemented_algorithms():
+    configured = {run["algorithm"] for run in load_config("experiment")["runs"]}
+    assert configured == set(QUANTUM_DEMOS)
+
+
+def test_scaffold_entries_declare_why():
+    for name, record in algorithm_entries().items():
+        if record.get("status") == "scaffold":
+            assert record.get("note"), f"{name} is a scaffold with no explanation"
+
+
+# --------------------------------------------------------------- backends
+
+
+def test_backends_config_matches_the_adapter():
+    from qprac_lab.backends.qiskit_adapter import SUPPORTED_BACKENDS
+
+    configured = load_config("backends")["backends"]
+    for backend in SUPPORTED_BACKENDS:
+        assert backend in configured, f"{backend} is supported in code but not configured"
+    assert configured["pennylane"]["enabled"] is True
+
+
+def test_dropped_backends_record_a_reason():
+    dropped = dropped_backends()
+    assert set(dropped) == {"ibm_runtime", "cudaq"}
+    for name, reason in dropped.items():
+        assert len(reason) > 30, f"{name} was dropped without a real explanation"
+
+
+def test_dropped_backends_are_not_also_offered():
+    configured = load_config("backends")["backends"]
+    assert not set(configured) & set(dropped_backends())
+
+
+def test_noise_presets_match_the_implementation():
+    """Mirrored values must not drift from the code they describe."""
+    from qprac_lab.backends.noise import NOISE_PRESETS
+
+    configured = load_config("noise_model")["presets"]
+    assert set(configured) == set(NOISE_PRESETS)
+    for name, spec in NOISE_PRESETS.items():
+        assert configured[name]["single_qubit_error"] == pytest.approx(spec.single_qubit_error)
+        assert configured[name]["two_qubit_error"] == pytest.approx(spec.two_qubit_error)
+        assert configured[name]["readout_error"] == pytest.approx(spec.readout_error)
+
+
+def test_noise_is_marked_enabled():
+    """It was left as `enabled: false` for a whole release after being implemented."""
+    assert load_config("noise_model")["noise_model"]["enabled"] is True
+
+
+# ---------------------------------------------------------------- project
+
+
+def test_project_version_matches_pyproject():
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert load_config("project")["project"]["version"] == pyproject["project"]["version"]
+
+
+def test_project_names_match_packaging():
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = load_config("project")["project"]
+    assert project["name"] == pyproject["project"]["name"]
+    assert project["cli"] in pyproject["project"]["scripts"]
+
+
+def test_declared_extras_exist_in_pyproject():
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    available = set(pyproject["project"]["optional-dependencies"])
+    for extra in load_config("project")["extras"]:
+        assert extra in available, f"configs claims an extra {extra!r} that pyproject lacks"
+
+
+def test_qiskit_config_reflects_the_v2_pin():
+    qiskit_config = load_config("qiskit")["qiskit"]
+    assert qiskit_config["primitives"] == "v2"
+    assert qiskit_config["minimum_version"].startswith("2")
+    assert set(load_config("qiskit")["gotchas"]) >= {"aer_seeding", "undecomposed_evolution"}
+
+
+def test_paper_topics_cover_the_implemented_modules():
+    papers = load_config("papers")["papers"]
+    assert {"simulation", "optimization"} <= set(papers)
+    for topic, entries in papers.items():
+        for entry in entries:
+            assert {"title", "authors", "year"} <= set(entry), f"{topic}: incomplete entry"
+
+
+def test_naming_convention_doc_lists_every_demo():
+    """It listed a deleted module and a deleted config for an entire release."""
+    text = (PROJECT_ROOT / "docs" / "NAMING_CONVENTION.md").read_text(encoding="utf-8")
+    for name in DEMOS:
+        assert name in text, f"NAMING_CONVENTION.md does not list {name}"
+    for name in CONFIG_NAMES:
+        assert f"{name}.yaml" in text, f"NAMING_CONVENTION.md does not list {name}.yaml"
+
+
+def test_naming_convention_doc_lists_nothing_that_was_deleted():
+    text = (PROJECT_ROOT / "docs" / "NAMING_CONVENTION.md").read_text(encoding="utf-8")
+    for gone in ("qsvc_classifier", "cudaq.yaml"):
+        assert gone not in text, f"NAMING_CONVENTION.md still lists the removed {gone}"
+
+
+def test_data_cache_is_independent_of_the_working_directory():
+    """A cwd-relative cache dir put a 12 MB archive in notebooks/data/raw.
+
+    Notebooks execute with their own directory as cwd, so a relative default
+    silently downloads somewhere else -- and the root-anchored ignore rule does
+    not match the nested path, so it gets committed.
+    """
+    import os
+
+    from qprac_lab.data.hetionet import default_cache_dir
+
+    from_root = default_cache_dir()
+    previous = os.getcwd()
+    try:
+        os.chdir(PROJECT_ROOT / "notebooks")
+        assert default_cache_dir() == from_root
+    finally:
+        os.chdir(previous)
+    assert from_root.is_absolute()
+
+
+def test_no_downloaded_data_is_tracked_by_git():
+    """Nothing under a data/raw or data/processed directory belongs in the repo."""
+    import subprocess
+
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True
+    ).stdout.split()
+    offenders = [
+        path
+        for path in tracked
+        if ("data/raw/" in path or "data/processed/" in path)
+        and not path.endswith(".gitkeep")
+    ]
+    assert not offenders, f"downloaded data committed to the repo: {offenders}"
