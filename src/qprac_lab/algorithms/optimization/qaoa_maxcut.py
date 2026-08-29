@@ -184,8 +184,3 @@ def run_qaoa_maxcut_tutorial(
             "unconstrained": "every bitstring is a valid cut, so no penalty term is needed",
         },
     )
-
-
-def run_qaoa_maxcut_scaffold():
-    """Backwards-compatible alias for :func:`run_qaoa_maxcut_tutorial`."""
-    return run_qaoa_maxcut_tutorial()

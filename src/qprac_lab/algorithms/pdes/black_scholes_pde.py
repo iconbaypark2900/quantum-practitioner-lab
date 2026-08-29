@@ -223,8 +223,3 @@ def run_black_scholes_pde_tutorial(
             ),
         },
     )
-
-
-def run_black_scholes_pde_scaffold():
-    """Backwards-compatible alias for :func:`run_black_scholes_pde_tutorial`."""
-    return run_black_scholes_pde_tutorial()

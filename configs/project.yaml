@@ -1,8 +1,10 @@
+# `version` is checked against pyproject.toml by tests/test_configs.py.
 project:
-  name: qprac-lab
+  name: quantum-practitioner-lab
+  package: qprac_lab
+  cli: qprac-lab
   version: 0.3.0
-  default_backend: qiskit_aer
-  default_shots: 1024
+  default_backend: statevector
   random_seed: 42
 
 paths:
@@ -11,3 +13,12 @@ paths:
   results: results
   papers: papers
   notebooks: notebooks
+  tutorials: tutorials
+  configs: configs
+
+extras:
+  qiskit: Required by every quantum tutorial.
+  nature: PySCF-backed molecular Hamiltonians at arbitrary bond lengths.
+  pennylane: Independent cross-check of the Qiskit results.
+  xgboost: Extra classical baseline for the QML tutorials.
+  dev: pytest, ruff, mypy.

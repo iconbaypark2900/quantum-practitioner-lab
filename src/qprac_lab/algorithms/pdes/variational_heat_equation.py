@@ -215,8 +215,3 @@ def run_variational_heat_equation_tutorial(
             "non-convex optimisation",
         },
     )
-
-
-def run_variational_heat_equation_scaffold():
-    """Backwards-compatible alias for :func:`run_variational_heat_equation_tutorial`."""
-    return run_variational_heat_equation_tutorial()

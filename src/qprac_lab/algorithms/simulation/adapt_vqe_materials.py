@@ -308,8 +308,3 @@ def run_adapt_vqe_materials(
             ),
         },
     )
-
-
-def run_adapt_vqe_materials_scaffold():
-    """Backwards-compatible alias for :func:`run_adapt_vqe_materials`."""
-    return run_adapt_vqe_materials()

@@ -1,6 +1,21 @@
+# Targets Qiskit 2.x and its V2 primitives only. The V1 Estimator and Sampler
+# were removed in Qiskit 2.0, and VQE/QAOA no longer ship in qiskit core, so
+# this project implements its own optimisation loops on scipy.
 qiskit:
-  default_simulator: aer_simulator
-  shots: 1024
-  seed_simulator: 42
+  minimum_version: "2.0"
+  primitives: v2
+  default_backend: statevector
+  shots: null            # null means exact expectation values
+  seed: 42
   optimization_level: 1
-  use_runtime: false
+
+gotchas:
+  aer_seeding: >-
+    Aer's EstimatorV2 seeds only via run_options["seed_simulator"]. A plain
+    "seed" key is accepted and silently ignored, leaving runs irreproducible.
+  evolution_gate_synthesis: >-
+    PauliEvolutionGate re-synthesises on every estimator call unless the circuit
+    is decomposed up front: measured 2.56s per call versus 0.006s decomposed.
+  undecomposed_evolution: >-
+    Operator() on an undecomposed PauliEvolutionGate returns the exact matrix
+    exponential and ignores the synthesis, reporting zero Trotter error.

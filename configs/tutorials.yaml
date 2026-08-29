@@ -1,7 +1,23 @@
+# Every tutorial, its markdown, and its notebook where one exists.
+# tests/test_configs.py asserts each path resolves, so a rename cannot silently
+# break this file again -- which is exactly how it came to point at
+# notebooks/04-hhl-linear-systems-intro.ipynb after that file was renumbered.
 tutorials:
   - id: vqe_molecular_energy
     path: tutorials/01-simulation/01-vqe-molecular-energy.md
     notebook: notebooks/01-vqe-molecular-energy.ipynb
+    priority: 1
+  - id: adapt_vqe_materials
+    path: tutorials/01-simulation/03-adapt-vqe-materials.md
+    notebook: null
+    priority: 2
+  - id: trotterization
+    path: tutorials/01-simulation/04-trotterization-time-evolution.md
+    notebook: null
+    priority: 2
+  - id: qaoa_maxcut
+    path: tutorials/02-optimization/01-qaoa-maxcut.md
+    notebook: notebooks/04-qaoa-maxcut.ipynb
     priority: 1
   - id: qaoa_portfolio_selection
     path: tutorials/02-optimization/02-qaoa-portfolio-selection.md
@@ -11,7 +27,40 @@ tutorials:
     path: tutorials/04-qml/03-quantum-kernel-biomedical-classification.md
     notebook: notebooks/03-quantum-kernel-biomedical-classification.ipynb
     priority: 1
+  - id: vqc_classifier
+    path: tutorials/04-qml/04-vqc-classifier.md
+    notebook: null
+    priority: 2
   - id: hhl_intro
     path: tutorials/03-pdes/01-hhl-linear-systems-intro.md
-    notebook: notebooks/04-hhl-linear-systems-intro.ipynb
+    notebook: notebooks/05-hhl-linear-systems-intro.ipynb
     priority: 3
+  - id: variational_heat_equation
+    path: tutorials/03-pdes/02-variational-heat-equation.md
+    notebook: notebooks/06-variational-heat-equation.ipynb
+    priority: 3
+  - id: black_scholes_pde
+    path: tutorials/03-pdes/03-black-scholes-pde.md
+    notebook: null
+    priority: 3
+
+benchmarks:
+  - id: noise_benchmark
+    path: tutorials/05-benchmarking/noise_benchmark.md
+  - id: cross_framework_verification
+    path: tutorials/05-benchmarking/cross_framework_verification.md
+  - id: benchmark_methodology
+    path: tutorials/05-benchmarking/benchmark_methodology.md
+
+# Short concept notes. They deliberately do not restate their tutorial; each
+# points at where the material actually lives, so navigation by topic works
+# without a second, thinner copy of the same content drifting alongside it.
+concepts:
+  - id: hamiltonians_expectation_values
+    path: tutorials/01-simulation/02-hamiltonians-expectation-values.md
+  - id: qubo_ising_mapping
+    path: tutorials/02-optimization/03-qubo-ising-mapping.md
+  - id: quantum_kernels
+    path: tutorials/04-qml/01-quantum-kernels.md
+  - id: qsvc
+    path: tutorials/04-qml/02-qsvc-classifier.md

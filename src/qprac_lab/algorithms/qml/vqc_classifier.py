@@ -407,8 +407,3 @@ def run_vqc_classifier_tutorial(
             "controlled_comparison": "same feature map, same data, same folds",
         },
     )
-
-
-def run_vqc_classifier_scaffold():
-    """Backwards-compatible alias for :func:`run_vqc_classifier_tutorial`."""
-    return run_vqc_classifier_tutorial()
