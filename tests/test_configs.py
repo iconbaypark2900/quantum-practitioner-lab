@@ -254,3 +254,40 @@ def test_naming_convention_doc_lists_nothing_that_was_deleted():
     text = (PROJECT_ROOT / "docs" / "NAMING_CONVENTION.md").read_text(encoding="utf-8")
     for gone in ("qsvc_classifier", "cudaq.yaml"):
         assert gone not in text, f"NAMING_CONVENTION.md still lists the removed {gone}"
+
+
+def test_data_cache_is_independent_of_the_working_directory():
+    """A cwd-relative cache dir put a 12 MB archive in notebooks/data/raw.
+
+    Notebooks execute with their own directory as cwd, so a relative default
+    silently downloads somewhere else -- and the root-anchored ignore rule does
+    not match the nested path, so it gets committed.
+    """
+    import os
+
+    from qprac_lab.data.hetionet import default_cache_dir
+
+    from_root = default_cache_dir()
+    previous = os.getcwd()
+    try:
+        os.chdir(PROJECT_ROOT / "notebooks")
+        assert default_cache_dir() == from_root
+    finally:
+        os.chdir(previous)
+    assert from_root.is_absolute()
+
+
+def test_no_downloaded_data_is_tracked_by_git():
+    """Nothing under a data/raw or data/processed directory belongs in the repo."""
+    import subprocess
+
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True
+    ).stdout.split()
+    offenders = [
+        path
+        for path in tracked
+        if ("data/raw/" in path or "data/processed/" in path)
+        and not path.endswith(".gitkeep")
+    ]
+    assert not offenders, f"downloaded data committed to the repo: {offenders}"
