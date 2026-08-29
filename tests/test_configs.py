@@ -10,8 +10,16 @@ They need no quantum stack.
 """
 
 
+import sys
+
 import pytest
-import tomllib
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover - only the 3.10 CI leg takes this path
+    # tomllib is stdlib from 3.11; this package supports 3.10, so the tests
+    # must too. Missing this broke the 3.10 CI job while 3.13 passed.
+    import tomli as tomllib
 
 from qprac_lab.config import (
     CONFIG_NAMES,
