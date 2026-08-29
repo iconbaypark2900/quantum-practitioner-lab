@@ -16,19 +16,18 @@ import pytest
 
 NOTEBOOK_DIR = Path(__file__).resolve().parents[1] / "notebooks"
 
-#: Notebooks backing an implemented tutorial; these are committed with outputs.
+#: Every notebook backs an implemented tutorial and is committed with outputs.
 EXECUTED_NOTEBOOKS = (
     "01-vqe-molecular-energy.ipynb",
     "02-qaoa-portfolio-selection.ipynb",
     "03-quantum-kernel-biomedical-classification.ipynb",
     "04-qaoa-maxcut.ipynb",
-)
-
-#: Placeholders for scaffolds that are still classical.
-PLACEHOLDER_NOTEBOOKS = (
     "05-hhl-linear-systems-intro.ipynb",
     "06-variational-heat-equation.ipynb",
 )
+
+#: No placeholders remain. Kept so the distinction survives if one is added.
+PLACEHOLDER_NOTEBOOKS: tuple[str, ...] = ()
 
 
 def load(name):
@@ -98,3 +97,12 @@ def test_all_notebooks_are_accounted_for():
     """A new notebook must be classified, so it cannot skip these checks."""
     on_disk = {p.name for p in NOTEBOOK_DIR.glob("*.ipynb")}
     assert on_disk == set(EXECUTED_NOTEBOOKS) | set(PLACEHOLDER_NOTEBOOKS)
+
+
+@pytest.mark.parametrize("name", EXECUTED_NOTEBOOKS)
+def test_notebook_is_a_walkthrough_not_a_stub(name):
+    """Guards the gap that let two 160-character stubs pass as notebooks."""
+    notebook = load(name)
+    characters = sum(len("".join(c["source"]).strip()) for c in notebook["cells"])
+    assert characters > 1000, f"{name} is {characters} characters -- a stub"
+    assert len(code_cells(notebook)) >= 4, f"{name} has too few code cells to walk through anything"

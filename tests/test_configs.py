@@ -67,6 +67,40 @@ def test_every_tutorial_path_resolves():
             )
 
 
+def test_referenced_notebooks_have_real_content():
+    """Existence is not enough, and this file learned that the hard way.
+
+    The first version of this suite checked only that a referenced notebook
+    *existed*. Two of the six were 160-character stubs at the time, so the config
+    advertised coverage that was not there and the tests agreed with it. A path
+    check validates the filename; this validates the claim.
+    """
+    import json
+
+    for entry in tutorial_entries():
+        if not entry.get("notebook"):
+            continue
+        notebook = json.loads(resolve(entry["notebook"]).read_text(encoding="utf-8"))
+        code_cells = [c for c in notebook["cells"] if c["cell_type"] == "code"]
+        characters = sum(
+            len("".join(c.get("source", [])).strip()) for c in notebook["cells"]
+        )
+        assert code_cells, f"{entry['id']}: notebook has no code cells"
+        assert characters > 1000, (
+            f"{entry['id']}: notebook is {characters} characters -- a stub, not a walkthrough"
+        )
+        assert any(c.get("outputs") for c in code_cells), (
+            f"{entry['id']}: notebook has no stored output; re-run "
+            "`jupyter nbconvert --to notebook --execute --inplace`"
+        )
+
+
+def test_a_tutorial_without_a_notebook_says_so_explicitly():
+    """`notebook: null` is a claim of absence; a missing key is an oversight."""
+    for entry in tutorial_entries():
+        assert "notebook" in entry, f"{entry['id']}: notebook key omitted rather than set to null"
+
+
 def test_every_concept_note_resolves_and_points_somewhere():
     """A signpost that does not point anywhere is just a thinner duplicate."""
     for entry in concept_entries():

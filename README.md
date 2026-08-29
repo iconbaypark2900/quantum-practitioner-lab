@@ -205,8 +205,8 @@ they read on GitHub without running anything:
 | [`02-qaoa-portfolio-selection`](notebooks/02-qaoa-portfolio-selection.ipynb) | QUBO → Ising, penalty vs XY mixer, depth sweep, noise |
 | [`03-quantum-kernel-biomedical-classification`](notebooks/03-quantum-kernel-biomedical-classification.ipynb) | Hetionet data, leakage and degree checks, cross-validated comparison, self-fidelity |
 | [`04-qaoa-maxcut`](notebooks/04-qaoa-maxcut.ipynb) | The unconstrained reference problem — **start here** |
-
-`05` and `06` remain placeholders for the PDE scaffolds.
+| [`05-hhl-linear-systems-intro`](notebooks/05-hhl-linear-systems-intro.ipynb) | Exact solve, then every caveat measured: encoding, conditioning, readout |
+| [`06-variational-heat-equation`](notebooks/06-variational-heat-equation.ipynb) | VQLS at 1/8 the depth of HHL, and the norm it cannot represent |
 
 ```bash
 jupyter lab notebooks/
@@ -244,7 +244,7 @@ tutorials/
 
 src/qprac_lab/
   algorithms/{simulation,optimization,pdes,qml}/
-  backends/       # Qiskit V2 primitive adapter; CUDA-Q and Runtime placeholders
+  backends/       # Qiskit V2 adapter, noise presets, PennyLane cross-check
   baselines/      # exact diagonalisation, classical optimisation, classical ML
   benchmarks/     # runner and result schema
   circuits/  data/  metrics/  papers/  visualization/
