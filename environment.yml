@@ -2,7 +2,7 @@ name: qprac-lab
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
+  - python=3.11
   - numpy
   - scipy
   - pandas
@@ -11,11 +11,17 @@ dependencies:
   - networkx
   - pyyaml
   - jupyter
+  # PySCF is the one dependency that is markedly happier from conda-forge than
+  # from pip; it backs the arbitrary-bond-length path in tutorial 1.
+  - pyscf
   - pip
   - pip:
       - pytest
       - ruff
-      - qiskit
-      - qiskit-aer
-      - qiskit-machine-learning
-      - qiskit-optimization
+      # Qiskit 2.x only: the V1 Estimator/Sampler primitives this project used
+      # to target were removed in 2.0, and every algorithm here uses V2.
+      - qiskit>=2.0
+      - qiskit-aer>=0.15
+      - qiskit-machine-learning>=0.9
+      - qiskit-optimization>=0.7
+      - qiskit-nature>=0.8

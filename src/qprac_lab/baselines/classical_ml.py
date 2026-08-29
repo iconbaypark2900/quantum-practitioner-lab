@@ -1,9 +1,23 @@
 from __future__ import annotations
 
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+
+
+def predict_scores(model, x):
+    """Continuous scores for ROC-AUC, whatever the estimator offers.
+
+    ``decision_function`` is preferred over ``predict_proba``: for SVMs the
+    probabilities come from an extra Platt-scaling fit that costs a cross
+    validation and changes nothing about the ranking ROC-AUC measures. Asking
+    for them is also deprecated in scikit-learn 1.9.
+    """
+    if hasattr(model, "decision_function"):
+        return np.asarray(model.decision_function(x))
+    return np.asarray(model.predict_proba(x))[:, 1]
 
 
 def train_rbf_svm(x_train, y_train):
@@ -15,7 +29,7 @@ def train_rbf_svm(x_train, y_train):
     model = Pipeline(
         [
             ("scaler", StandardScaler()),
-            ("svc", SVC(kernel="rbf", probability=True)),
+            ("svc", SVC(kernel="rbf")),
         ]
     )
     model.fit(x_train, y_train)
@@ -51,4 +65,15 @@ def train_xgboost_classifier(x_train, y_train, random_state: int = 42):
         ]
     )
     model.fit(x_train, y_train)
+    return model
+
+
+def train_precomputed_svm(kernel_train, y_train, c: float = 1.0):
+    """SVM over a precomputed kernel matrix.
+
+    This is what turns any kernel -- quantum included -- into a classifier: the
+    SVM only ever sees pairwise similarities, never the feature vectors.
+    """
+    model = SVC(kernel="precomputed", C=c)
+    model.fit(kernel_train, y_train)
     return model

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from itertools import product
 import math
 import random
+from itertools import product
+
 import numpy as np
 
 
@@ -22,6 +23,26 @@ def brute_force_maxcut(n_nodes: int, edges: list[tuple[int, int]]):
             best_value = value
             best_bitstring = bitstring
     return {"bitstring": best_bitstring, "objective_value": best_value}
+
+
+def greedy_maxcut(n_nodes: int, edges: list[tuple[int, int]]):
+    """Greedy Max-Cut heuristic: place each node on whichever side cuts more edges.
+
+    A fast, decent baseline -- and the realistic comparison for QAOA, since
+    brute force stops being available long before QAOA becomes interesting.
+    """
+    assignment = ["0"] * n_nodes
+    for node in range(n_nodes):
+        gains = {"0": 0, "1": 0}
+        for i, j in edges:
+            neighbour = j if i == node else i if j == node else None
+            if neighbour is None or neighbour >= node:
+                continue
+            for side in ("0", "1"):
+                gains[side] += assignment[neighbour] != side
+        assignment[node] = "0" if gains["0"] >= gains["1"] else "1"
+    bitstring = "".join(assignment)
+    return {"bitstring": bitstring, "objective_value": maxcut_value(bitstring, edges)}
 
 
 def portfolio_objective(x, expected_returns, covariance, risk_lambda: float = 0.5) -> float:
@@ -52,7 +73,12 @@ def brute_force_portfolio(expected_returns, covariance, risk_lambda: float = 0.5
     return {"selection": best_x, "objective_value": best_value}
 
 
-def greedy_portfolio_selection(expected_returns, covariance, budget: int = 3, risk_lambda: float = 0.5):
+def greedy_portfolio_selection(
+    expected_returns,
+    covariance,
+    budget: int = 3,
+    risk_lambda: float = 0.5,
+):
     """Greedy baseline using return ranking.
 
     Algorithm type:
@@ -61,7 +87,10 @@ def greedy_portfolio_selection(expected_returns, covariance, budget: int = 3, ri
     selected = np.argsort(expected_returns)[-budget:]
     x = np.zeros(len(expected_returns), dtype=int)
     x[selected] = 1
-    return {"selection": x, "objective_value": portfolio_objective(x, expected_returns, covariance, risk_lambda)}
+    return {
+        "selection": x,
+        "objective_value": portfolio_objective(x, expected_returns, covariance, risk_lambda),
+    }
 
 
 def simulated_annealing_portfolio(
