@@ -129,7 +129,7 @@ one-parameter UCC ansatz and a `StatevectorEstimator` loop.
   chemical accuracy, recovering 100% of the correlation energy HF misses
 - Finding: shot noise, not the algorithm, is the binding constraint — at 8192
   shots the same circuit misses chemical accuracy
-- Papers: Peruzzo (VQE), O'Malley (2-qubit H2), Grimsley (ADAPT-VQE)
+- Papers: [Peruzzo](https://doi.org/10.1038/ncomms5213) (VQE), [O'Malley](https://doi.org/10.1103/PhysRevX.6.031007) (2-qubit H2), [Grimsley](https://doi.org/10.1038/s41467-019-10988-2) (ADAPT-VQE)
 
 ```bash
 python scripts/run_demo.py --algorithm vqe_molecular_energy
@@ -151,7 +151,7 @@ term, mapped to an Ising Hamiltonian, solved with `QAOAAnsatz`.
   optimiser's opening angles (s.d. 43%). `restarts=5` is therefore the default,
   and a Dicke warm start (`xy_initial_state="dicke"`) trades peak for
   reliability — a third of the variance, but never the 20x peak.
-- Papers: Farhi (QAOA), Hadfield (constraint-preserving mixers)
+- Papers: [Farhi](https://arxiv.org/abs/1411.4028) (QAOA), [Hadfield](https://doi.org/10.3390/a12020034) (constraint-preserving mixers)
 
 ```bash
 python scripts/run_demo.py --algorithm qaoa_portfolio_selection
@@ -172,8 +172,8 @@ ZZ feature map + fidelity kernel + precomputed-kernel SVM, predicting real
   clearly — that conclusion was an artifact of the generator, not the method
 - Honesty check: negatives are degree-matched, so degree alone scores 0.538
   instead of 0.689. The dataset reports this rather than asserting it.
-- Papers: Havlíček (quantum kernels), Himmelstein (Hetionet), Huang (when they
-  help), Cristianini (alignment)
+- Papers: [Havlíček](https://doi.org/10.1038/s41586-019-0980-2) (quantum kernels), [Himmelstein](https://doi.org/10.7554/eLife.26726) (Hetionet),
+  [Huang](https://doi.org/10.1038/s41467-021-22539-9) (when they help), [Cristianini](https://papers.nips.cc/paper_files/paper/2001/hash/1f71e393b3809197ed66df836fe833e5-Abstract.html) (alignment)
 
 ```bash
 python scripts/download_data.py    # ~12 MB, once
@@ -190,7 +190,7 @@ plain approximation ratio is meaningful. Start here before the portfolio tutoria
   with 49.7% of shots on an optimal cut
 - Finding: greedy also hits the exact optimum, instantly. On an 8-vertex graph
   the quantum method has nothing to offer — which is what that size looks like.
-- Papers: Farhi (QAOA), Goemans-Williamson (the 0.878 classical guarantee)
+- Papers: [Farhi](https://arxiv.org/abs/1411.4028) (QAOA), [Goemans-Williamson](https://doi.org/10.1145/227683.227684) (the 0.878 classical guarantee)
 
 ```bash
 python scripts/run_demo.py --algorithm qaoa_maxcut
