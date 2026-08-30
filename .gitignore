@@ -6,6 +6,8 @@ __pycache__/
 .DS_Store
 results/*.csv
 results/*.json
+# ...except the hardware run, which exists to be committed as data.
+!results/hardware_vqe_h2.json
 results/*.png
 data/raw/*
 data/processed/*

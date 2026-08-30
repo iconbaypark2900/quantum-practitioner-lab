@@ -50,6 +50,11 @@ xgboost = [
 cudaq = [
   "cudaq"
 ]
+# For scripts/run_hardware_vqe.py only -- a one-off, run by hand. Deliberately not
+# a backend adapter and not touched by CI (DECISIONS.md #7).
+hardware = [
+  "qiskit-ibm-runtime>=0.30"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
