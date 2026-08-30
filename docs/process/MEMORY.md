@@ -2,10 +2,16 @@
 
 ## Current state
 
-The three priority tutorials plus QAOA Max-Cut are **real quantum
-implementations**, not scaffolds. Remaining secondary tutorials (PDEs,
-ADAPT-VQE, Trotter, VQC) are still classical scaffolds and are labelled as such
-by `qprac-lab list`.
+**Ten of the eleven demos are real quantum implementations.** VQE, ADAPT-VQE,
+Trotterization, QAOA (portfolio and Max-Cut), the quantum kernel, VQC, HHL, the
+variational heat equation and Black-Scholes all run circuits. The single
+remaining scaffold is `logistics_routing_qubo`, and `qprac-lab list` is the
+authority — `demo_registry.QUANTUM_DEMOS` is what it reads, and
+`tests/test_configs.py` checks that against `configs/algorithms.yaml`.
+
+This paragraph previously claimed the PDE, ADAPT-VQE, Trotter and VQC tutorials
+were still scaffolds, long after they shipped. Prefer `qprac-lab list` over this
+file: a status recorded in prose is a status nothing checks.
 
 ## Stack decision
 

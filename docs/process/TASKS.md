@@ -83,3 +83,35 @@ All items resolved -- two implemented, two deliberately dropped with reasons.
       CI-tested, and drives the same Qiskit stack. Replaced by PennyLane.
 - [x] Noise model support (depolarizing + readout presets: light/moderate/heavy)
 - [x] Benchmark all tutorials against ideal/noisy simulation (`scripts/run_noise_sweep.py`)
+
+## Phase 5: Publish and maintain
+
+The repository went public on 2026-08-30 under Apache-2.0.
+
+- [x] Apache-2.0 licence, PEP 639 metadata, description, topics, CI badges
+- [x] CITATION.cff
+- [x] Migrate off the Qiskit APIs 3.0 removes (`efficient_su2`, `real_amplitudes`,
+      `qaoa_ansatz`, explicit `Gate.control(annotated=)`) — project-code
+      deprecations 5 → 0, every published number held, QAOA depth 70 → 28
+- [x] `forward-compat` workflow: weekly pre-release check plus a deprecation
+      inventory, advisory only, and honest about the case where no pre-release
+      exists
+- [x] Delete or wire in every unimported module — found a latent bug in
+      `exact_lowest_eigenvalue` doing it (0.0 for Pauli-Y instead of -1.0)
+- [x] State the operating range in the README (2–8 qubits, simulation only)
+- [x] Write `benchmark_methodology.md`, including what the presets do **not** model
+- [x] Collapse five paper stores into one generated from `configs/papers.yaml`;
+      16 papers, every identifier verified to resolve
+- [x] Rewrite the nine stub tutorial pages; add `tests/test_doc_links.py` so a
+      README cannot advertise a tutorial that does not exist
+- [x] Move process docs to `docs/process/`; bump actions off Node 20
+- [x] Prepare `scripts/run_hardware_vqe.py` (one-off, run by hand, `--dry-run`
+      exercises it without credentials)
+- [ ] **Run it.** Needs an IBM Quantum account; no credential belongs in this repo.
+
+### Known, and not ours to fix
+
+`qiskit-nature` constructs a `BlueprintCircuit` in `hartree_fock.py`, which
+Qiskit 3.0 removes. Only the optional `[nature]` extra reaches it, so core and
+`[qiskit]` installs are 3.0-clean. Watched by `forward-compat`.
+
