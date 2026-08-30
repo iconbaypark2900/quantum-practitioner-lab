@@ -1,7 +1,7 @@
 # Next Build Steps
 
 Every item from the original roadmap is closed -- implemented, or dropped with a
-stated reason. `TASKS.md` records the outcome of each.
+stated reason. `../process/TASKS.md` records the outcome of each.
 
 ## API notes for Qiskit 2.x
 
