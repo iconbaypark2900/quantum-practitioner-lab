@@ -43,6 +43,46 @@ actually runs a circuit.
 Targets **Qiskit 2.x and its V2 primitives**. The V1 `Estimator`/`Sampler` were
 removed in Qiskit 2.0, so this project does not use them.
 
+## What this does not show
+
+Every circuit here is small and every result is simulated. That is the right size
+for teaching and the wrong thing to leave implicit, so here it is in one place.
+
+| Tutorial | Qubits | Problem size | Shots |
+| --- | --- | --- | --- |
+| VQE (H2) | 2 | STO-3G, parity-mapped | exact statevector |
+| ADAPT-VQE | 2 | same H2 Hamiltonian | exact statevector |
+| Trotterization | 4 | TFIM, 8 steps | 4096 |
+| QAOA portfolio | 6 | 6 assets, budget 3, p=3 | 4096 |
+| QAOA Max-Cut | 8 | 8-vertex 3-regular graph, p=3 | 4096 |
+| Quantum kernel | 4 | 200 Hetionet pairs, 4 features | 2048 |
+| VQC | 4 | same 200 pairs and folds | 2048 |
+| HHL | 4 | 2x2 system, 2 clock qubits | exact statevector |
+| Variational heat equation | 3 | 8-point grid, 3 implicit steps | exact statevector |
+| Black-Scholes | 4 | variational; 6-qubit classical FD grid | exact statevector |
+
+Three limits follow from that, and they bound what any number here can mean.
+
+**Scale.** 2 to 8 qubits. Everything is classically simulable by construction --
+that is what makes the classical baselines computable at all, and it is why the
+baselines so often win. Nothing here demonstrates quantum advantage, and results
+at this size do not extrapolate.
+
+**Simulation only.** There is no hardware execution anywhere in this repository.
+The noise presets are a depolarizing-plus-readout *model*: no coherent error, no
+crosstalk, no drift within a run, no leakage, and no real device topology. A
+preset is a controlled approximation of a device, not a measurement of one.
+
+**What that means for the findings.** This project can say *"here is how these
+algorithms behave at small scale under simulated device noise."* It cannot say
+*"here is how quantum methods perform."* Where a finding is expected to survive
+scale -- shot noise binding before algorithmic error, methods needing a precise
+number degrading faster than methods needing only an ordering -- the tutorial says
+why. Where it is an artifact of this size, it says that too.
+
+See [`tutorials/05-benchmarking/benchmark_methodology.md`](tutorials/05-benchmarking/benchmark_methodology.md)
+for what the presets model and what they leave out.
+
 ## Quick start
 
 ```bash
