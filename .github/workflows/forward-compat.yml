@@ -36,15 +36,42 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: install against the newest published qiskit, pre-releases included
+      - name: install the pinned stack, then upgrade to any pre-release
+        id: versions
         run: |
           pip install -e ".[dev,qiskit,nature,pennylane]"
+          STABLE=$(pip show qiskit | awk '/^Version:/{print $2}')
           pip install --upgrade --pre qiskit qiskit-aer
+          PRE=$(pip show qiskit | awk '/^Version:/{print $2}')
+          echo "stable=$STABLE" >> "$GITHUB_OUTPUT"
+          echo "pre=$PRE" >> "$GITHUB_OUTPUT"
+          if [ "$STABLE" = "$PRE" ]; then
+            echo "exercised=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "exercised=true" >> "$GITHUB_OUTPUT"
+          fi
 
+      # Without this the job is quietly misleading. When no pre-release is
+      # published, `pip install --pre` resolves to the same stable version the
+      # pinned build already uses, and the job passes having tested nothing new.
+      # A green check that implies coverage it does not have is the exact failure
+      # this project exists to avoid, so say which case happened.
       - name: record the resolved versions
         run: |
           {
             echo "### Resolved quantum stack"
+            echo ""
+            if [ "${{ steps.versions.outputs.exercised }}" = "true" ]; then
+              S="${{ steps.versions.outputs.stable }}"
+              P="${{ steps.versions.outputs.pre }}"
+              echo "Pre-release **exercised**: qiskit $S -> $P."
+            else
+              echo "**No pre-release published.** \`pip install --pre\` resolved to"
+              echo "qiskit ${{ steps.versions.outputs.pre }}, the same version the"
+              echo "pinned build already uses — so this run re-tested stable and says"
+              echo "nothing about the next major. Not a signal of 3.0 readiness."
+            fi
+            echo ""
             echo '```'
             pip list 2>/dev/null | grep -Ei "^(qiskit|pennylane|pyscf)" || true
             echo '```'
@@ -58,7 +85,12 @@ jobs:
         if: always()
         run: |
           if [ "${{ steps.pytest.outcome }}" = "success" ]; then
-            echo "Suite passes against the pre-release stack." >> "$GITHUB_STEP_SUMMARY"
+            if [ "${{ steps.versions.outputs.exercised }}" = "true" ]; then
+              echo "Suite passes against the pre-release stack." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Suite passes, but against stable — no pre-release was available." \
+                >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
             {
               echo "**The suite fails against the Qiskit pre-release.**"
