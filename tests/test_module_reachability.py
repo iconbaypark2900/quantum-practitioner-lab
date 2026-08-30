@@ -54,23 +54,23 @@ DOCUMENTED_PLACEHOLDERS = frozenset(
     }
 )
 
-#: Scaffold-era modules nothing imports. Shrink this set by deleting the module,
-#: never by adding to it. See the ``/prune-dead-modules`` command.
+#: Empty, and meant to stay that way. Shrink this set by deleting the module or
+#: wiring it in, never by adding to it. See the ``/prune-dead-modules`` command.
 #:
-#: The three PDE-adjacent entries are the more interesting find: the PDE tutorials
-#: do compute their classical baselines, but inline -- so the modules that
-#: advertise themselves as the baseline and metric home are never called, and
-#: AGENTS.md's "no quantum tutorial without a classical baseline" rule is met by
-#: code that lives somewhere else entirely.
-KNOWN_DEAD = frozenset(
-    {
-        "qprac_lab.baselines.classical_pdes",
-        "qprac_lab.baselines.exact_diagonalization",
-        "qprac_lab.circuits.ansatz",
-        "qprac_lab.circuits.feature_maps",
-        "qprac_lab.metrics.pdes",
-    }
-)
+#: It held five entries when this test was written. Four were deleted: two scaffold
+#: descriptors superseded by the real Qiskit builders, plus a PDE baseline and a PDE
+#: metrics module whose functions did not match what the tutorials actually do --
+#: an *explicit* finite-difference step against the implicit Euler the heat equation
+#: really takes, and an L2/residual pair against the VQLS cost it really minimises.
+#: Wiring those in would have changed the numerical method to suit the helper.
+#:
+#: The fifth, ``baselines.exact_diagonalization``, was wired in instead, because it
+#: genuinely was the baseline ``hamiltonian_utils`` had reimplemented inline. Doing
+#: so surfaced a bug that had sat there unrun: a ``dtype=float`` cast that discarded
+#: the imaginary part of a Hermitian matrix and returned 0.0 for Pauli-Y instead of
+#: -1.0 -- a plausible number rather than an error, which is the failure mode
+#: DECISIONS.md #8 is about.
+KNOWN_DEAD: frozenset[str] = frozenset()
 
 SEARCH_ROOTS = ("src", "tests", "scripts", "notebooks")
 

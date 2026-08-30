@@ -32,10 +32,23 @@ Everything backend-specific lives in `src/qprac_lab/backends/`, including the
 conventions that fail silently: Aer's `seed_simulator`, transpilation into the
 noise basis, and decomposing `PauliEvolutionGate` before an optimisation loop.
 
-## 6. Source papers are project assets
+## 6. Source papers are project assets, with one source of truth
 
-Paper lists are maintained in Markdown and in machine-readable YAML/JSON, and
-every tutorial ends with its references.
+`configs/papers.yaml` is the only file edited by hand. `papers/index.json`,
+`papers/<section>.md` and `tutorials/<section>/papers.md` are all generated from
+it by `scripts/generate_paper_index.py`, and `qprac_lab.papers.registry` reads it
+rather than keeping a copy.
+
+This was five hand-maintained stores, which is how Kadowaki & Nishimori and Sarma
+et al. ended up cited in the tutorials and registered in none of them, and how six
+papers the README names reached no store at all. The lesson is the same one the
+configs taught: duplication nobody compares is drift waiting to happen.
+
+Every entry carries a DOI, arXiv id or URL, and each was checked to resolve to a
+document whose title matches before being committed. A fabricated identifier is
+worse than a missing one, because it looks like traceability. `IDENTIFIER_COVERAGE_FLOOR`
+in `tests/test_paper_citations.py` is set to the full count, so losing one fails
+the suite rather than degrading quietly.
 
 ## 7. IBM Runtime and CUDA-Q are dropped, not deferred
 

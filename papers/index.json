@@ -2,41 +2,163 @@
   "simulation": [
     {
       "title": "A variational eigenvalue solver on a photonic quantum processor",
-      "topic": "VQE"
+      "authors": "Peruzzo et al.",
+      "year": 2014,
+      "topic": "VQE",
+      "venue": "Nature Communications 5, 4213",
+      "doi": "10.1038/ncomms5213",
+      "arxiv": "1304.3061",
+      "resolves_to": "https://doi.org/10.1038/ncomms5213"
     },
     {
       "title": "An adaptive variational algorithm for exact molecular simulations on a quantum computer",
-      "topic": "ADAPT-VQE"
+      "authors": "Grimsley et al.",
+      "year": 2019,
+      "topic": "ADAPT-VQE",
+      "venue": "Nature Communications 10, 3007",
+      "doi": "10.1038/s41467-019-10988-2",
+      "arxiv": "1812.11173",
+      "resolves_to": "https://doi.org/10.1038/s41467-019-10988-2"
     },
     {
       "title": "Universal Quantum Simulators",
-      "topic": "Hamiltonian simulation"
+      "authors": "Seth Lloyd",
+      "year": 1996,
+      "topic": "Hamiltonian simulation",
+      "venue": "Science 273, 1073",
+      "doi": "10.1126/science.273.5278.1073",
+      "resolves_to": "https://doi.org/10.1126/science.273.5278.1073"
+    },
+    {
+      "title": "Scalable Quantum Simulation of Molecular Energies",
+      "authors": "O'Malley et al.",
+      "year": 2016,
+      "topic": "Two-qubit H2",
+      "venue": "Physical Review X 6, 031007",
+      "doi": "10.1103/PhysRevX.6.031007",
+      "arxiv": "1512.06860",
+      "resolves_to": "https://doi.org/10.1103/PhysRevX.6.031007"
     }
   ],
   "optimization": [
     {
       "title": "A Quantum Approximate Optimization Algorithm",
-      "topic": "QAOA"
+      "authors": "Farhi, Goldstone, Gutmann",
+      "year": 2014,
+      "topic": "QAOA",
+      "venue": "arXiv preprint",
+      "arxiv": "1411.4028",
+      "resolves_to": "https://arxiv.org/abs/1411.4028"
+    },
+    {
+      "title": "Quantum annealing in the transverse Ising model",
+      "authors": "Kadowaki and Nishimori",
+      "year": 1998,
+      "topic": "Quantum annealing",
+      "venue": "Physical Review E 58, 5355",
+      "doi": "10.1103/PhysRevE.58.5355",
+      "arxiv": "cond-mat/9804280",
+      "resolves_to": "https://doi.org/10.1103/PhysRevE.58.5355"
+    },
+    {
+      "title": "From the Quantum Approximate Optimization Algorithm to a Quantum Alternating Operator Ansatz",
+      "authors": "Hadfield et al.",
+      "year": 2019,
+      "topic": "Constraint-preserving mixers",
+      "venue": "Algorithms 12, 34",
+      "doi": "10.3390/a12020034",
+      "arxiv": "1709.03489",
+      "resolves_to": "https://doi.org/10.3390/a12020034"
+    },
+    {
+      "title": "Improved approximation algorithms for maximum cut and satisfiability problems using semidefinite programming",
+      "authors": "Goemans and Williamson",
+      "year": 1995,
+      "topic": "Classical Max-Cut guarantee",
+      "venue": "Journal of the ACM 42, 1115",
+      "doi": "10.1145/227683.227684",
+      "resolves_to": "https://doi.org/10.1145/227683.227684"
     }
   ],
   "pdes": [
     {
       "title": "Quantum algorithm for linear systems of equations",
-      "topic": "HHL"
+      "authors": "Harrow, Hassidim, Lloyd",
+      "year": 2009,
+      "topic": "HHL",
+      "venue": "Physical Review Letters 103, 150502",
+      "doi": "10.1103/PhysRevLett.103.150502",
+      "arxiv": "0811.3171",
+      "resolves_to": "https://doi.org/10.1103/PhysRevLett.103.150502"
     },
     {
       "title": "Variational quantum algorithms for nonlinear problems",
-      "topic": "Variational PDEs"
+      "authors": "Lubasch et al.",
+      "year": 2020,
+      "topic": "Variational PDEs",
+      "venue": "Physical Review A 101, 010301",
+      "doi": "10.1103/PhysRevA.101.010301",
+      "arxiv": "1907.09032",
+      "resolves_to": "https://doi.org/10.1103/PhysRevA.101.010301"
+    },
+    {
+      "title": "Quantum Variational Solving of Nonlinear and Multi-Dimensional Partial Differential Equations",
+      "authors": "Sarma et al.",
+      "year": 2023,
+      "topic": "Variational PDEs",
+      "venue": "arXiv preprint",
+      "arxiv": "2311.01531",
+      "resolves_to": "https://arxiv.org/abs/2311.01531"
     }
   ],
   "qml": [
     {
       "title": "Supervised learning with quantum-enhanced feature spaces",
-      "topic": "Quantum kernels"
+      "authors": "Havlíček et al.",
+      "year": 2019,
+      "topic": "Quantum kernels",
+      "venue": "Nature 567, 209",
+      "doi": "10.1038/s41586-019-0980-2",
+      "arxiv": "1804.11326",
+      "resolves_to": "https://doi.org/10.1038/s41586-019-0980-2"
     },
     {
       "title": "Data re-uploading for a universal quantum classifier",
-      "topic": "VQC"
+      "authors": "Pérez-Salinas et al.",
+      "year": 2020,
+      "topic": "VQC",
+      "venue": "Quantum 4, 226",
+      "doi": "10.22331/q-2020-02-06-226",
+      "arxiv": "1907.02085",
+      "resolves_to": "https://doi.org/10.22331/q-2020-02-06-226"
+    },
+    {
+      "title": "Systematic integration of biomedical knowledge prioritizes drugs for repurposing",
+      "authors": "Himmelstein et al.",
+      "year": 2017,
+      "topic": "Hetionet",
+      "venue": "eLife 6, e26726",
+      "doi": "10.7554/eLife.26726",
+      "resolves_to": "https://doi.org/10.7554/eLife.26726"
+    },
+    {
+      "title": "Power of data in quantum machine learning",
+      "authors": "Huang et al.",
+      "year": 2021,
+      "topic": "When quantum kernels help",
+      "venue": "Nature Communications 12, 2631",
+      "doi": "10.1038/s41467-021-22539-9",
+      "arxiv": "2011.01938",
+      "resolves_to": "https://doi.org/10.1038/s41467-021-22539-9"
+    },
+    {
+      "title": "On Kernel-Target Alignment",
+      "authors": "Cristianini et al.",
+      "year": 2001,
+      "topic": "Kernel-target alignment",
+      "venue": "Advances in Neural Information Processing Systems 14",
+      "url": "https://papers.nips.cc/paper_files/paper/2001/hash/1f71e393b3809197ed66df836fe833e5-Abstract.html",
+      "resolves_to": "https://papers.nips.cc/paper_files/paper/2001/hash/1f71e393b3809197ed66df836fe833e5-Abstract.html"
     }
   ]
 }

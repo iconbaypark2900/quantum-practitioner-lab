@@ -31,6 +31,7 @@ from typing import Any
 import numpy as np
 
 from qprac_lab.backends.qiskit_adapter import require_qiskit
+from qprac_lab.baselines.exact_diagonalization import exact_lowest_eigenvalue
 
 #: 1 bohr expressed in angstrom (CODATA 2018).
 ANGSTROM_PER_BOHR = 0.529177210903
@@ -86,7 +87,7 @@ class MolecularHamiltonian:
 
     def exact_electronic_energy(self) -> float:
         """Lowest eigenvalue of the electronic Hamiltonian (exact diagonalisation)."""
-        return float(np.linalg.eigvalsh(self.to_matrix())[0])
+        return exact_lowest_eigenvalue(self.to_matrix())
 
     def exact_total_energy(self) -> float:
         """Full-CI ground-state energy within the chosen basis."""

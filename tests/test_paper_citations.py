@@ -41,18 +41,13 @@ TUTORIAL_SECTIONS = {
     "04-qml": "qml",
 }
 
-#: Papers cited in prose that no machine-readable store lists yet.
+#: Empty, and meant to stay that way. A ratchet, not an exemption: shrink it by
+#: registering the paper in ``configs/papers.yaml``, never by adding a new title.
 #:
-#: A ratchet, not an exemption: shrink it by adding the paper to
-#: ``configs/papers.yaml`` and ``papers/index.json``, never by adding a new title.
-#: See the ``/backfill-papers`` command.
-KNOWN_UNREGISTERED = frozenset(
-    {
-        "Quantum annealing in the transverse Ising model",
-        "Quantum Variational Solving of Nonlinear and Multi-Dimensional "
-        "Partial Differential Equations",
-    }
-)
+#: It held the two papers that were cited in prose and recorded in no
+#: machine-readable store -- Kadowaki & Nishimori (1998) and Sarma et al. (2023).
+#: Both are registered now, along with the six the README cited and no store held.
+KNOWN_UNREGISTERED: frozenset[str] = frozenset()
 
 #: Fields every registry entry must already carry.
 REQUIRED_FIELDS = ("title", "authors", "year", "topic")
@@ -60,10 +55,11 @@ REQUIRED_FIELDS = ("title", "authors", "year", "topic")
 #: Fields that make a citation *resolvable*. At least one is what the floor counts.
 IDENTIFIER_FIELDS = ("doi", "arxiv", "url")
 
-#: How many registry entries currently resolve to the paper itself. Raise this as
-#: identifiers are backfilled; the test fails if it is ever set above reality, and
-#: fails if reality drops below it.
-IDENTIFIER_COVERAGE_FLOOR = 0
+#: How many registry entries resolve to the paper itself. Every one of the 16 does:
+#: each doi/arxiv/url was checked to return a document whose title matches the
+#: entry. The floor is the full count, so losing one is a test failure rather than
+#: a silent regression.
+IDENTIFIER_COVERAGE_FLOOR = 16
 
 QUOTED_TITLE = re.compile(r'"([^"]+)"')
 
@@ -120,20 +116,61 @@ def test_yaml_and_json_registries_list_the_same_papers(topic):
     )
 
 
-def test_module_registry_titles_are_all_registered():
-    """``papers/registry.py`` is a third store; keep it pinned to the first."""
+def test_module_registry_is_derived_not_stored():
+    """``papers/registry.py`` used to be a fifth store; it must stay a view.
+
+    The check is that every citation it exposes contains a title the config knows.
+    A hand-added entry would not, which is what made this module the one most
+    likely to drift when it held its own copy.
+    """
     registered = _registered_titles()
-    unknown = set()
-    for citations in PAPER_REGISTRY.values():
+    for topic, citations in PAPER_REGISTRY.items():
+        assert citations, f"topic {topic!r} exposes no citations"
         for citation in citations:
-            # Entries read "Authors -- Title"; the title is what the registry keys on.
-            _, _, title = citation.partition("—")
-            title = title or citation
-            if _normalise(title) not in registered:
-                unknown.add(_normalise(title))
-    assert not unknown, (
-        f"titles in src/qprac_lab/papers/registry.py that no registry lists: {sorted(unknown)}"
+            assert any(title in _normalise(citation) for title in registered), (
+                f"{citation!r} is not derived from configs/papers.yaml"
+            )
+    assert sum(len(v) for v in PAPER_REGISTRY.values()) == len(
+        [entry for entries in _registry().values() for entry in entries]
+    ), "the derived view lost or duplicated a paper"
+
+
+def test_generated_files_are_in_sync_with_the_config():
+    """A forgotten ``generate_paper_index.py`` run must fail, not merge quietly."""
+    import importlib.util
+    import json as _json
+
+    spec = importlib.util.spec_from_file_location(
+        "_genpapers", PROJECT_ROOT / "scripts" / "generate_paper_index.py"
     )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    on_disk = _json.loads((PROJECT_ROOT / "papers" / "index.json").read_text(encoding="utf-8"))
+    markdown = {
+        path: path.read_text(encoding="utf-8")
+        for path in list((PROJECT_ROOT / "papers").glob("*.md"))
+        + list((PROJECT_ROOT / "tutorials").glob("*/papers.md"))
+    }
+
+    module.main()  # regenerates in place
+
+    regenerated = _json.loads((PROJECT_ROOT / "papers" / "index.json").read_text(encoding="utf-8"))
+    assert on_disk == regenerated, (
+        "papers/index.json is stale -- run python scripts/generate_paper_index.py"
+    )
+    for path, before in markdown.items():
+        assert before == path.read_text(encoding="utf-8"), (
+            f"{path.name} is stale -- run python scripts/generate_paper_index.py"
+        )
+
+
+def test_every_registered_paper_resolves_to_a_url():
+    """An entry with no identifier is a citation you cannot follow."""
+    from qprac_lab.papers.registry import all_papers, resolve
+
+    unresolvable = [paper["title"] for paper in all_papers() if not resolve(paper)]
+    assert not unresolvable, f"no doi, arxiv or url for: {unresolvable}"
 
 
 # ------------------------------------------------------------------ prose resolves
