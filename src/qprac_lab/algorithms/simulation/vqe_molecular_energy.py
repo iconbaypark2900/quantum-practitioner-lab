@@ -95,7 +95,7 @@ def build_ansatz(
     require_qiskit("Building a VQE ansatz")
     from qiskit import QuantumCircuit
     from qiskit.circuit import Parameter
-    from qiskit.circuit.library import EfficientSU2, RealAmplitudes
+    from qiskit.circuit.library import efficient_su2, real_amplitudes
 
     if kind == "two_qubit_uccsd":
         if num_qubits != 2:
@@ -117,9 +117,9 @@ def build_ansatz(
         return circuit
 
     if kind == "efficient_su2":
-        return EfficientSU2(num_qubits, reps=reps, entanglement="linear")
+        return efficient_su2(num_qubits, reps=reps, entanglement="linear")
     if kind == "real_amplitudes":
-        return RealAmplitudes(num_qubits, reps=reps, entanglement="linear")
+        return real_amplitudes(num_qubits, reps=reps, entanglement="linear")
 
     raise ValueError(f"Unknown ansatz {kind!r}; expected one of {ANSATZ_CHOICES}")
 
