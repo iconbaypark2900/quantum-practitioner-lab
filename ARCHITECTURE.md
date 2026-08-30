@@ -24,10 +24,10 @@ src/qprac_lab/
   backends/         Qiskit V2 adapter, noise presets, PennyLane cross-check
   baselines/        exact diagonalisation, classical optimisation, classical ML
   benchmarks/       runner and result schema
-  circuits/         mixers (XY, transverse field), ansatz and feature-map helpers
+  circuits/         mixers (XY, transverse field)
   config.py         loads configs/, validated against the code by tests
   data/             synthetic generators and the Hetionet loader
-  metrics/          classification, optimisation, PDE metrics
+  metrics/          classification, optimisation
   papers/           source-paper registry
   visualization/    the required output artifacts
 ```

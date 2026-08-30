@@ -99,3 +99,48 @@ def test_describe_pauli_hamiltonian_is_serialisable():
     assert described["molecule"] == "H2"
     assert len(described["terms"]) == 5
     assert described["nuclear_repulsion_energy"] == pytest.approx(H2_NUCLEAR_REPULSION, abs=1e-8)
+
+
+# ---------------------------------------------------------------- baseline module
+
+
+def test_exact_diagonalisation_handles_a_complex_hermitian_matrix():
+    """The bug that sat unrun in ``baselines/exact_diagonalization`` until it was wired in.
+
+    The module cast its input with ``dtype=float``. On the H2 Hamiltonian that is
+    harmless, because its matrix happens to be real -- which is exactly why nothing
+    noticed. Handed a genuinely complex Hermitian matrix it discarded the imaginary
+    part and returned a plausible number: ``0.0`` for Pauli-Y, whose eigenvalues are
+    -1 and +1, with only a ``ComplexWarning`` to show for it.
+    """
+    import numpy as np
+
+    from qprac_lab.baselines.exact_diagonalization import exact_lowest_eigenvalue
+
+    pauli_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+    assert exact_lowest_eigenvalue(pauli_y) == pytest.approx(-1.0, abs=1e-12)
+
+
+def test_exact_diagonalisation_refuses_a_non_hermitian_matrix():
+    """Silence is the failure mode here, so the wrong input has to raise."""
+    import numpy as np
+
+    from qprac_lab.baselines.exact_diagonalization import exact_lowest_eigenvalue
+
+    with pytest.raises(ValueError, match="Hermitian"):
+        exact_lowest_eigenvalue(np.array([[0.0, 1.0], [2.0, 0.0]]))
+
+
+def test_hamiltonian_exact_energy_goes_through_the_baseline_module():
+    """The baseline is named, not reimplemented inline -- AGENTS.md's first rule."""
+    import numpy as np
+
+    from qprac_lab.baselines.exact_diagonalization import exact_lowest_eigenvalue
+
+    hamiltonian = build_h2_hamiltonian(0.735)
+    assert hamiltonian.exact_electronic_energy() == pytest.approx(
+        exact_lowest_eigenvalue(hamiltonian.to_matrix()), abs=1e-12
+    )
+    assert hamiltonian.exact_electronic_energy() == pytest.approx(
+        float(np.linalg.eigvalsh(hamiltonian.to_matrix())[0]), abs=1e-12
+    )
