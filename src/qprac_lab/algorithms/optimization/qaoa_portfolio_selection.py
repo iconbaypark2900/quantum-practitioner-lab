@@ -136,13 +136,21 @@ def run_qaoa(
             initial_state=xy_initial_state,
         )
     elif mixer == "transverse_field":
-        from qiskit.circuit.library import QAOAAnsatz
+        from qiskit.circuit.library import qaoa_ansatz
 
-        # Decompose once, up front. QAOAAnsatz holds PauliEvolutionGates whose
-        # synthesis is otherwise redone on every estimator call -- measured at
-        # 2.56s per call versus 0.006s pre-decomposed on an 8-qubit graph, a
-        # ~400x difference that turns a 2-second optimisation into 13 minutes.
-        ansatz = QAOAAnsatz(cost_operator=cost_operator, reps=reps).decompose(reps=3)
+        # The functional builder, not the ``QAOAAnsatz`` class: it returns an
+        # already-flattened circuit of rx/rz/rzz/h with no ``PauliEvolutionGate``
+        # left in it.
+        #
+        # That matters for a reason worth keeping. The class form holds
+        # PauliEvolutionGates whose synthesis is redone on *every* estimator call --
+        # measured at 2.56s per call versus 0.006s once decomposed, a ~400x
+        # difference that turned a 2-second optimisation into 13 minutes. The fix
+        # used to be an explicit ``.decompose(reps=3)`` here. ``qaoa_ansatz`` makes
+        # that unnecessary rather than merely tidier, so the workaround is gone --
+        # but anything that reintroduces an unsynthesised gate into this path needs
+        # to know why it was there.
+        ansatz = qaoa_ansatz(cost_operator, reps=reps)
     else:
         raise ValueError(f"Unknown mixer {mixer!r}; expected 'transverse_field' or 'xy'")
     adapter = QiskitBackendAdapter(backend=backend, shots=None, seed=seed, noise=noise)

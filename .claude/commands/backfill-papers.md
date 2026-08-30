@@ -1,0 +1,60 @@
+---
+description: Give every cited paper a resolvable identifier and collapse the five citation stores.
+allowed-tools: Bash(python -m pytest:*), Read, Write, Edit, WebSearch, WebFetch
+---
+
+# Backfill the paper registry
+
+Close the gap between what `DECISIONS.md` #6 promises and what ships.
+
+## Why
+
+Source papers are declared project assets, maintained in Markdown *and* in
+machine-readable form. In practice the project grew **five** places to record a
+paper, and nothing compared them:
+
+| Store | Holds | Carries |
+| --- | --- | --- |
+| `configs/papers.yaml` | 8 | title, authors, year, topic |
+| `papers/index.json` | 8 | title, topic |
+| `papers/<section>.md` | 10 | prose |
+| `tutorials/<section>/papers.md` | 10 | prose |
+| `src/qprac_lab/papers/registry.py` | 5 | strings |
+
+Nothing anywhere carries a DOI, an arXiv id, or a URL. For a project whose appeal
+is traceability, the citation trail is the weakest link in it — and of the ten papers
+the README names, six appear in no store at all: O'Malley, Hadfield, Himmelstein,
+Huang, Cristianini and Goemans–Williamson.
+
+`tests/test_paper_citations.py` now enforces the invariants. Two ratchets there
+are the work list.
+
+## Do
+
+1. **Close `KNOWN_UNREGISTERED` first.** Two papers are cited in prose and
+   registered nowhere: Kadowaki & Nishimori (1998), Sarma et al. (2023). Add them
+   to both `configs/papers.yaml` and `papers/index.json`, then delete them from the
+   ratchet.
+2. **Extend the schema.** Add `doi`, `arxiv` and `url` to every entry. The test
+   already validates the format of any identifier present — a DOI starts `10.`, an
+   arXiv id matches `NNNN.NNNNN` or the pre-2007 `subject/NNNNNNN` form.
+   **Verify each identifier resolves before committing it.** A fabricated DOI is
+   worse than a missing one: it looks like traceability and is not.
+3. **Raise `IDENTIFIER_COVERAGE_FLOOR`** to the new count in the same change. The
+   floor is what turns "we should add DOIs" into something that can fail.
+4. **Register the README's citations.** Every paper named in the README or a
+   tutorial belongs in the registry. Add the topic buckets you need.
+5. **Collapse the redundant stores.** Five is four too many. `configs/papers.yaml`
+   is the one `qprac_lab.config` actually loads, so make it the source of truth and
+   generate `papers/index.json` from it in a script. Replace the hand-maintained
+   dict in `src/qprac_lab/papers/registry.py` with a read of the config — it is
+   the store most likely to drift, because nothing but itself refers to it.
+6. Follow `PROMPTS.md` → "Add a paper summary" for anything you add prose for:
+   problem, method, contribution, limitations, and how it maps to this project.
+
+## Done when
+
+- `KNOWN_UNREGISTERED` is empty.
+- `IDENTIFIER_COVERAGE_FLOOR` equals the total number of registered papers.
+- Every identifier in the registry was checked to resolve.
+- `papers/index.json` is generated, not hand-edited, and the generator is in CI.

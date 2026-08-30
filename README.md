@@ -1,5 +1,10 @@
 # Quantum Practitioner Lab
 
+[![CI](https://github.com/iconbaypark2900/quantum-practitioner-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/iconbaypark2900/quantum-practitioner-lab/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.13-blue.svg)](pyproject.toml)
+[![Qiskit](https://img.shields.io/badge/qiskit-2.x%20V2%20primitives-6929c4.svg)](https://www.ibm.com/quantum/qiskit)
+
 A practical quantum engineering lab for simulation, optimization, partial
 differential equations, quantum machine learning, benchmarking, and
 source-paper-driven examples.

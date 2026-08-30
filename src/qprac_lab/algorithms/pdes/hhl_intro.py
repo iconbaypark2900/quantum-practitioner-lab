@@ -138,9 +138,17 @@ def hhl_circuit(matrix, rhs, num_clock_qubits: int = 2, evolution_time: float | 
 
     circuit.initialize(rhs / np.linalg.norm(rhs), solution[:])
     circuit.h(clock[:])
+    # ``annotated=False`` is deliberate, not inherited. Qiskit 2.3 deprecated the
+    # implicit default and 3.0 switches it to ``annotated=True``, which defers the
+    # controlled-gate construction to the transpiler. That is usually the better
+    # choice -- but this tutorial *publishes* ``circuit_depth`` and
+    # ``two_qubit_gates`` as the headline cost of HHL, and an AnnotatedOperation
+    # reports the depth it has not paid for yet. Keep the cost visible here.
     for index in range(num_clock_qubits):
         power = expm(1j * matrix * evolution_time * (2**index))
-        circuit.append(UnitaryGate(power).control(1), [clock[index], *solution[:]])
+        circuit.append(
+            UnitaryGate(power).control(1, annotated=False), [clock[index], *solution[:]]
+        )
     circuit.append(QFTGate(num_clock_qubits).inverse(), clock[:])
 
     # Rotate the ancilla by arcsin(C / lambda) so its |1> branch carries 1/lambda.
@@ -153,7 +161,9 @@ def hhl_circuit(matrix, rhs, num_clock_qubits: int = 2, evolution_time: float | 
         angle = 2 * np.arcsin(min(smallest / eigenvalue, 1.0))
         circuit.append(
             RYGate(angle).control(
-                num_clock_qubits, ctrl_state=format(value, f"0{num_clock_qubits}b")
+                num_clock_qubits,
+                ctrl_state=format(value, f"0{num_clock_qubits}b"),
+                annotated=False,
             ),
             clock[:] + [ancilla[0]],
         )
@@ -161,7 +171,9 @@ def hhl_circuit(matrix, rhs, num_clock_qubits: int = 2, evolution_time: float | 
     circuit.append(QFTGate(num_clock_qubits), clock[:])
     for index in reversed(range(num_clock_qubits)):
         power = expm(-1j * matrix * evolution_time * (2**index))
-        circuit.append(UnitaryGate(power).control(1), [clock[index], *solution[:]])
+        circuit.append(
+            UnitaryGate(power).control(1, annotated=False), [clock[index], *solution[:]]
+        )
     circuit.h(clock[:])
     return circuit, evolution_time
 

@@ -1,0 +1,157 @@
+name: forward-compat
+
+# The project's stated position is that it targets Qiskit 2.x and its V2
+# primitives *because* it refuses version shims (DECISIONS.md #3). That is a good
+# position and it has a cost: when the next major lands, there is no shim layer to
+# absorb it. This workflow is how that cost gets paid early instead of loudly.
+#
+# It is deliberately non-blocking. A pre-release breaking the suite is information,
+# not a reason to fail a PR that has nothing to do with it -- so every job here is
+# advisory and writes its findings to the run summary.
+
+on:
+  schedule:
+    # Mondays, 06:00 UTC. Weekly is enough: the signal is "a future release will
+    # break us", which does not need same-day resolution.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+  pull_request:
+    # Only when the dependency surface itself changes.
+    paths:
+      - "pyproject.toml"
+      - ".github/workflows/forward-compat.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  prerelease:
+    name: qiskit pre-release (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: install the pinned stack, then upgrade to any pre-release
+        id: versions
+        run: |
+          pip install -e ".[dev,qiskit,nature,pennylane]"
+          STABLE=$(pip show qiskit | awk '/^Version:/{print $2}')
+          pip install --upgrade --pre qiskit qiskit-aer
+          PRE=$(pip show qiskit | awk '/^Version:/{print $2}')
+          echo "stable=$STABLE" >> "$GITHUB_OUTPUT"
+          echo "pre=$PRE" >> "$GITHUB_OUTPUT"
+          if [ "$STABLE" = "$PRE" ]; then
+            echo "exercised=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "exercised=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Without this the job is quietly misleading. When no pre-release is
+      # published, `pip install --pre` resolves to the same stable version the
+      # pinned build already uses, and the job passes having tested nothing new.
+      # A green check that implies coverage it does not have is the exact failure
+      # this project exists to avoid, so say which case happened.
+      - name: record the resolved versions
+        run: |
+          {
+            echo "### Resolved quantum stack"
+            echo ""
+            if [ "${{ steps.versions.outputs.exercised }}" = "true" ]; then
+              S="${{ steps.versions.outputs.stable }}"
+              P="${{ steps.versions.outputs.pre }}"
+              echo "Pre-release **exercised**: qiskit $S -> $P."
+            else
+              echo "**No pre-release published.** \`pip install --pre\` resolved to"
+              echo "qiskit ${{ steps.versions.outputs.pre }}, the same version the"
+              echo "pinned build already uses — so this run re-tested stable and says"
+              echo "nothing about the next major. Not a signal of 3.0 readiness."
+            fi
+            echo ""
+            echo '```'
+            pip list 2>/dev/null | grep -Ei "^(qiskit|pennylane|pyscf)" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: pytest
+        id: pytest
+        run: pytest -q
+
+      - name: report the outcome
+        if: always()
+        run: |
+          if [ "${{ steps.pytest.outcome }}" = "success" ]; then
+            if [ "${{ steps.versions.outputs.exercised }}" = "true" ]; then
+              echo "Suite passes against the pre-release stack." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Suite passes, but against stable — no pre-release was available." \
+                >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            {
+              echo "**The suite fails against the Qiskit pre-release.**"
+              echo ""
+              echo "This is advisory, so nothing is blocked. It means the next major"
+              echo "release will break \`main\` unless the affected call sites move."
+              echo "Run \`/qiskit-migration\` to work through them."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  deprecations:
+    name: deprecation inventory (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -e ".[dev,qiskit,nature,pennylane]"
+
+      # Runs against the *current* pinned stack, not the pre-release. Every line
+      # here is an API that already announced its own removal, which makes this
+      # the list of work that has to happen before the next major -- known well
+      # before anything actually breaks.
+      # Match on "deprecated as of Qiskit <version>" rather than on the sentence
+      # shape. Qiskit phrases these at least two ways -- "The class ``X`` is
+      # deprecated..." but also "``X``'s argument ``y`` is deprecated..." -- and a
+      # pattern anchored to "The class|method|function" silently drops the second
+      # form. That is how the Gate.control(annotated=) deprecation went missing
+      # from the first version of this job, which was the one deprecation here
+      # capable of changing a published number.
+      - name: inventory qiskit deprecation warnings
+        run: |
+          pytest -q -W "always::DeprecationWarning" 2>&1 | tee pytest-output.txt || true
+          sed 's/.*DeprecationWarning: //' pytest-output.txt \
+            | grep -E "deprecated as of Qiskit" \
+            | sed -E 's/(deprecated as of Qiskit [0-9]+\.[0-9]+)\..*/\1./' \
+            | sed -E 's/^[[:space:]]+//' \
+            | sort -u > deprecations.txt || true
+          {
+            echo "### Deprecated APIs currently in use"
+            echo ""
+            if [ -s deprecations.txt ]; then
+              echo "Each of these is scheduled for removal. Count: $(wc -l < deprecations.txt)"
+              echo ""
+              echo '```'
+              cat deprecations.txt
+              echo '```'
+            else
+              echo "None found."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deprecation-inventory
+          path: |
+            deprecations.txt
+            pytest-output.txt
+          retention-days: 30
