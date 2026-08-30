@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: Quantum Practitioner Lab
+message: >-
+  If you use this software or its results, please cite it using the metadata
+  below.
+type: software
+authors:
+  - given-names: Jon
+    family-names: B
+    alias: iconbaypark2900
+repository-code: "https://github.com/iconbaypark2900/quantum-practitioner-lab"
+abstract: >-
+  Runnable quantum algorithm tutorials for simulation, optimization, PDEs and
+  quantum machine learning, built on Qiskit 2.x V2 primitives. Every method is
+  measured against a classical baseline and the comparison is reported as it
+  came out, including when the classical method wins. Results are cross-checked
+  against an independently written PennyLane implementation and benchmarked
+  under simulated device noise.
+keywords:
+  - quantum computing
+  - qiskit
+  - pennylane
+  - variational quantum eigensolver
+  - quantum approximate optimization algorithm
+  - quantum machine learning
+  - benchmarking
+license: Apache-2.0
+version: 0.3.0
+date-released: "2026-08-30"
